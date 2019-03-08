@@ -2,24 +2,18 @@
 
 
 # Question
-# How to get base URL
-# Confirm "token" is actually "secret"
-# Confirm scope of CircleCI JIRA app
-# App Key (is is cireclic.jira, or something else)
-# need to add module to atlassian-connect.json - https://developer.atlassian.com/cloud/jira/software/modules/build/
-
-
 
 
 #
 # JWT Encoder Bash Script - https://willhaley.com/blog/generate-jwt-with-bash/
 #
 
-secret=$CONNECT_SECRET
+secret="${CONNECT_SECRET}"
 
-test_url="https://eddiewebb.atlassian.net/rest/api/2/project"
+
+test_url="https://eddiewebb.atlassian.net/rest/builds/0.1/bulk"
 # see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
-path='GET&/rest/api/2/project&'
+path='POST&/rest/builds/0.1/bulk&'
 qsh=$(printf %s "$path" | openssl sha -sha256 | cut -d" " -f2)
 
 
@@ -30,19 +24,18 @@ header='{
 }'
 
 
-claim='{
-	"iss": "circleci.jira"
+claims='{
+	"iss": "my-add-on"
 }'
 
 # Use jq to set the dynamic `qsh`, `iat` and `exp`
 # fields on the header using the current time.
-# `iat` is set to now, and `exp` is now + 1 second.
 claims=$(
-	echo "${claim}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" \
+	echo "${claims}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" \
 	'
 	($time_str | tonumber) as $time_num
 	| .iat=$time_num
-	| .exp=($time_num + 100)
+	| .exp=($time_num + 1800)
 	| .qsh=$qsh
 	'
 )
@@ -80,7 +73,6 @@ echo $header | json
 echo $claims | json
 echo "Token: ${jwt_token}"
 
-
-curl -H "Authorization: JWT ${jwt_token}" "${test_url}" 
+echo " ${test_url}?jwt=${jwt_token}"
 
 
