@@ -1,0 +1,37 @@
+{"builds": [
+    {
+      "schemaVersion": "1.0",
+      "pipelineId": "27f5dffa-7f6e-4da6-8390-f3305f863765",
+      "buildNumber": 66,
+      "updateSequenceNumber": 1523494301448,
+      "displayName": "Studio Light #66",
+      "description": "Build #66: Failed",
+      "label": "<string>",
+      "url": "https://circleci.com/gh/eddiewebb/studio-light/66",
+      "state": "failed",
+      "lastUpdated": "2018-01-20T23:27:25+00:00",
+      "issueKeys": [
+        "CC-4"
+      ],
+      "testInfo": {
+        "totalNumber": 150,
+        "numberPassed": 145,
+        "numberFailed": 5,
+        "numberSkipped": 0
+      },
+      "references": [
+        {
+          "commit": {
+            "id": "60e7b0d273af9510d9c472b06c3f2175be25f5c2",
+            "repositoryUri": "https://github.com/eddiewebb/studio-light"
+          },
+          "ref": {
+            "name": "testing",
+            "uri": "https://github.com/eddiewebb/studio-light/tree/testing"
+          }
+        }
+      ]
+    }
+  ]
+
+}
