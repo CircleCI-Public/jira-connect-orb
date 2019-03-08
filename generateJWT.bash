@@ -6,7 +6,6 @@
 # Confirm "token" is actually "secret"
 # Confirm scope of CircleCI JIRA app
 # App Key (is is cireclic.jira, or something else)
-# Does "Write" scope include read?
 # need to add module to atlassian-connect.json - https://developer.atlassian.com/cloud/jira/software/modules/build/
 
 
