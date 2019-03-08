@@ -10,10 +10,11 @@
 
 secret="${CONNECT_SECRET}"
 
-
-test_url="https://eddiewebb.atlassian.net/rest/builds/0.1/bulk"
+test_url="${1}"
+path="${2}"
+#test_url="https://eddiewebb.atlassian.net/rest/builds/0.1/bulk"
 # see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
-path='POST&/rest/builds/0.1/bulk&'
+#path='POST&/rest/builds/0.1/bulk&'
 qsh=$(printf %s "$path" | openssl sha -sha256 | cut -d" " -f2)
 
 
@@ -68,11 +69,11 @@ signing_input=$(echo "${header_base64}.${claims_base64}")
 signature=$(echo "${signing_input}" | hmacsha256_sign | base64_encode)
 jwt_token="${signing_input}.${signature}"
 
-#debug
-echo $header | json
-echo $claims | json
-echo "Token: ${jwt_token}"
+# #debug
+# echo $header | json
+# echo $claims | json
+# echo "Token: ${jwt_token}"
 
-echo " ${test_url}?jwt=${jwt_token}"
+echo -n "${jwt_token}"
 
 
