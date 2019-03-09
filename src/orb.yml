@@ -65,7 +65,7 @@ commands:
             # Use jq to set the dynamic `qsh`, `iat` and `exp`
             # fields on the header using the current time.
             # For more on "qsh" see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
-            qsh=$(printf %s "$query_string" | openssl sha -sha256 | cut -d" " -f2)
+            qsh=$(printf %s "$query_string" | openssl dgst -sha256 | cut -d" " -f2)
             claims=$(
               echo "{}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" --arg iss "$app_key" \
               '
