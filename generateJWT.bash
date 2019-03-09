@@ -26,7 +26,7 @@ header='{
 
 
 claims='{
-	"iss": "my-add-on"
+	"iss": "circleci.jira.buildsbeta"
 }'
 
 # Use jq to set the dynamic `qsh`, `iat` and `exp`
