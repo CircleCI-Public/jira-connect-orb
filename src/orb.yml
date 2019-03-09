@@ -142,7 +142,13 @@ commands:
 
 
 
-            curl -H "Authorization: JWT ${jwt_token}" \
+            res=`curl -o /dev/null -w "%{http_code}" \
+            -H "Authorization: JWT ${jwt_token}" \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
-            -X POST "${base_url}${cannonical}" --data @jira-status.json
+            -X POST "${base_url}${cannonical}" --data @jira-status.json`
+
+            if [ $res -ne 202 ];then 
+              echo "Error calling Jira"
+              exit 1
+            fi
