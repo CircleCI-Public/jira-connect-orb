@@ -102,9 +102,9 @@ commands:
             signature=$(echo "${signing_input}" | hmacsha256_sign | base64_encode)
             jwt_token="${signing_input}.${signature}"
 
-            
+            time_now=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
              echo {} | jq \
-              --arg lastUpdated "$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')" \
+              --arg lastUpdated "${time_now}" \
               --arg state "${JIRA_BUILD_STATUS}" \
               --arg jobName "${CIRCLE_JOB}" \
               --arg buildNumber "${CIRCLE_BUILD_NUM}" \
@@ -115,7 +115,6 @@ commands:
               --arg branchName "${CIRCLE_BRANCH}" \
               --arg pipelineId "${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-              --arg compareUrl "'""${CIRCLE_COMPARE_URL}""'"  \
               --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
               --argjson issueKeys "${ISSUE_KEYS}" \
