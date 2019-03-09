@@ -3,6 +3,7 @@ workflows:
   build-deploy:
     jobs:
       - test-locally
+      - test-dev
 
 orbs:
   dark: eddiewebb/burps@dev:eddie
