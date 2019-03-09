@@ -1,0 +1,161 @@
+version: 2.1
+
+description: Reports job status back to Atlassian JIRA instance using Atlassian Connect. 
+  Must install [APp NAME] from Atlassian Marketplace, and provide the proper ENV VARs.
+
+
+
+examples:
+  basic_workflow:
+    description: Notify Atlassian for each job.
+    usage:
+      version: 2.1
+      orbs: 
+        jira: circleci/jira@volatile
+
+      workflows:
+        build:
+          jobs:
+            - build:
+                post-steps:
+                  - jira/notify
+
+      jobs:
+        build:
+          docker:
+          - image: circleci/node:10
+          steps:
+            - run: echo "hello"
+
+commands:
+  notify:
+    parameters:
+      base_url:
+        description: The base Url for your Atlassian Jira Cloud instance. If omitted the env. variable ${JIRA_BASE_URL} is used.
+        default: "${JIRA_BASE_URL}"
+        type: string
+    steps:
+      - run:
+          name: JIRA - Setting Failure Condition
+          command: |
+            echo 'export JIRA_BUILD_STATUS="failed"' >> $BASH_ENV
+          when: on_fail
+
+      - run:
+          name: JIRA - Setting Success Condition
+          command: |
+            echo 'export JIRA_BUILD_STATUS="successful"' >> $BASH_ENV
+          when: on_success
+
+      - run: 
+          when: always
+          name: Update status in Atlassian Jira
+          command: |
+            ISSUE_KEYS='["CC-4"]'
+            base_url="<<parameters.base_url>>"
+            cannonical="/rest/builds/0.1/bulk"
+            app_key="circleci.jira.buildsbeta"
+            secret="${CONNECT_SECRET}"
+            # Dont chamge anything else
+            query_string="POST&${cannonical}&"
+            header='{
+              "typ": "JWT",
+              "alg": "HS256"
+            }'
+            # Use jq to set the dynamic `qsh`, `iat` and `exp`
+            # fields on the header using the current time.
+            # For more on "qsh" see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
+            qsh=$(printf %s "$query_string" | openssl sha -sha256 | cut -d" " -f2)
+            claims=$(
+              echo "{}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" --arg iss "$app_key" \
+              '
+              ($time_str | tonumber) as $time_num
+              | .iat=($time_num - 600)
+              | .exp=($time_num + 600)
+              | .qsh=$qsh
+              | .iss=$iss
+              '
+            )
+
+            base64_encode()
+            {
+              declare input=${1:-$(</dev/stdin)}
+              # Use `tr` to URL encode the output from base64.
+              printf '%s' "${input}" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'
+            }
+
+            json() {
+              declare input=${1:-$(</dev/stdin)}
+              printf '%s' "${input}" | jq -c .
+            }
+
+            hmacsha256_sign()
+            {
+              declare input=${1:-$(</dev/stdin)}
+              printf '%s' "${input}" | openssl dgst -binary -sha256 -hmac "${secret}"
+            }
+
+            header_base64=$(echo "${header}" | json | base64_encode)
+            claims_base64=$(echo "${claims}" | json | base64_encode)
+
+            signing_input=$(echo "${header_base64}.${claims_base64}")
+            signature=$(echo "${signing_input}" | hmacsha256_sign | base64_encode)
+            jwt_token="${signing_input}.${signature}"
+
+            
+             echo {} | jq \
+              --arg lastUpdated "$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')" \
+              --arg state "${JIRA_BUILD_STATUS}" \
+              --arg jobName "${CIRCLE_JOB}" \
+              --arg buildNumber "${CIRCLE_BUILD_NUM}" \
+              --arg url "${CIRCLE_BUILD_URL}" \
+              --arg commit "${CIRCLE_SHA1}" \
+              --arg refUri "${CIRCLE_REPOSITORY_URL}/tree/${CIRCLE_BRANCH}" \
+              --arg repositoryUri "${CIRCLE_REPOSITORY_URL}" \
+              --arg branchName "${CIRCLE_BRANCH}" \
+              --arg pipelineId "${CIRCLE_WORKFLOW_ID}" \
+              --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
+              --arg compareUrl "'""${CIRCLE_COMPARE_URL}""'"  \
+              --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
+              --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
+              --argjson issueKeys "${ISSUE_KEYS}" \
+              '
+              {
+                "builds": [
+                  {
+                    "schemaVersion": "1.0",
+                    "pipelineId": $pipelineId,
+                    "buildNumber": $buildNumber,
+                    "updateSequenceNumber": 0,
+                    "displayName": $display,
+                    "description": $description,
+                    "label": "CircleCI",
+                    "url": $url,
+                    "state": $state, 
+                    "lastUpdated": $lastUpdated,
+                    "issueKeys": $issueKeys,
+                    "references": [
+                      {
+                        "commit": {
+                          "id": $commit,
+                          "repositoryUri": $repositoryUri
+                        },
+                        "ref": {
+                          "name": $branchName,
+                          "uri": $refUri
+                        }
+                      }
+                    ]                    
+                  }
+                ]
+              }
+              ' > jira-status.json
+            
+
+
+
+
+            curl -H "Authorization: JWT ${jwt_token}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -X POST "${base_url}${cannonical}" --data @jira-status.json

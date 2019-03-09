@@ -1,0 +1,52 @@
+version: 2.1
+workflows:
+  build-deploy:
+    jobs:
+      - test-locally
+
+jobs:
+  test-locally:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - install-circleci
+      - run:
+          name: Pack and Validate
+          command: |
+            circleci config pack src/ > packed.yml
+            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+      - install-bats
+      - run:
+          name: Import Tests using BATS
+          command: |
+            export BATS_IMPORT_DEV_ORB="eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
+            bats test
+
+commands:
+  install-bats:
+    description: installs the BATS bash testing tool
+    steps:
+      - run:      
+          name: Install BATS (bash testing)
+          command: |
+            cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
+            sudo ./install.sh /usr/local
+      - run:
+          name: Install YQ
+          command: |
+            curl -L https://github.com/mikefarah/yq/releases/download/2.1.1/yq_linux_amd64 -o yq
+            chmod a+x yq
+            sudo mv yq /usr/local/bin/
+  install-circleci:
+    description: installs the new CIrcleCI CLI with orb support
+    steps:
+      - run: 
+          name: Install CircleCI CLI (the new one)
+          command: |
+            curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | sudo bash
+            circleci version
+            echo "Run circleci help"              
+            circleci help
+            echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > ~/.circleci/cli.yml
