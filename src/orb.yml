@@ -132,19 +132,7 @@ commands:
                     "url": $url,
                     "state": $state, 
                     "lastUpdated": $lastUpdated,
-                    "issueKeys": $issueKeys,
-                    "references": [
-                      {
-                        "commit": {
-                          "id": $commit,
-                          "repositoryUri": $repositoryUri
-                        },
-                        "ref": {
-                          "name": $branchName,
-                          "uri": $refUri
-                        }
-                      }
-                    ]                    
+                    "issueKeys": $issueKeys
                   }
                 ]
               }
