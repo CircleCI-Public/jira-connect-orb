@@ -21,7 +21,7 @@ jobs:
       - run:
           name: Import Tests using BATS
           command: |
-            bats test
+            bats tests
 
 commands:
   install-bats:
