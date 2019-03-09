@@ -4,6 +4,9 @@ workflows:
     jobs:
       - test-locally
 
+orbs:
+  dark: eddiewebb/burps@dev:eddie
+
 jobs:
   test-locally:
     docker:
@@ -22,6 +25,15 @@ jobs:
           name: Import Tests using BATS
           command: |
             bats tests
+  test-dev:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - dark/notify
+
+
+
 
 commands:
   install-bats:
