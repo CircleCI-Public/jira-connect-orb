@@ -1,21 +1,29 @@
 #!/usr/bin/env bash
 
-
-# Question
-
-
 #
-# JWT Encoder Bash Script - https://willhaley.com/blog/generate-jwt-with-bash/
+# JWT Encoder Bash Script 
+# Original from https://willhaley.com/blog/generate-jwt-with-bash/, modified for Atlassian Connect
 #
-
+app_key="circleci.jira.buildsbeta"
 secret="${CONNECT_SECRET}"
 
-test_url="${1}"
-path="${2}"
-#test_url="https://eddiewebb.atlassian.net/rest/builds/0.1/bulk"
-# see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
-#path='POST&/rest/builds/0.1/bulk&'
-qsh=$(printf %s "$path" | openssl sha -sha256 | cut -d" " -f2)
+USAGE=$(cat <<-END
+    returns a JWT token valid for POST ops to the Build Status Bulk Upload API
+
+    $0 <cannonical_url>
+
+    Example:
+    TOKEN=\$(bash generateJWT.bash "/rest/builds/0.1/bulk")
+END
+)
+
+if [ $# -ne 1 ]; then
+	echo $USAGE >&2
+	exit 1
+fi
+query_string="POST&${1}&"
+
+
 
 
 # Static header fields.
@@ -24,23 +32,20 @@ header='{
 	"alg": "HS256"
 }'
 
-
-claims='{
-	"iss": "circleci.jira.buildsbeta"
-}'
-
 # Use jq to set the dynamic `qsh`, `iat` and `exp`
 # fields on the header using the current time.
+# For more on "qsh" see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
+qsh=$(printf %s "$query_string" | openssl sha -sha256 | cut -d" " -f2)
 claims=$(
-	echo "${claims}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" \
+	echo "{}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" --arg iss "$app_key" \
 	'
 	($time_str | tonumber) as $time_num
 	| .iat=$time_num
 	| .exp=($time_num + 1800)
 	| .qsh=$qsh
+	| .iss=$iss
 	'
 )
-
 
 base64_encode()
 {
@@ -60,8 +65,6 @@ hmacsha256_sign()
 	printf '%s' "${input}" | openssl dgst -binary -sha256 -hmac "${secret}"
 }
 
-
-
 header_base64=$(echo "${header}" | json | base64_encode)
 claims_base64=$(echo "${claims}" | json | base64_encode)
 
@@ -69,10 +72,6 @@ signing_input=$(echo "${header_base64}.${claims_base64}")
 signature=$(echo "${signing_input}" | hmacsha256_sign | base64_encode)
 jwt_token="${signing_input}.${signature}"
 
-# #debug
-# echo $header | json
-# echo $claims | json
-# echo "Token: ${jwt_token}"
 
 echo -n "${jwt_token}"
 
