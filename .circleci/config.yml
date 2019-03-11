@@ -58,7 +58,11 @@ commands:
       - run: 
           name: Install CircleCI CLI (the new one)
           command: |
-            curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | sudo bash
+            #curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | sudo bash
+            curl -L https://github.com/CircleCI-Public/circleci-cli/releases/download/v0.1.3139/circleci-cli_0.1.3139_linux_amd64.tar.gz -o /tmp/cli.tar.gz
+            tar -xzf /tmp/cli.tar.gz -C /tmp
+            chmod a+x /tmp/circleci-cli_0.1.3139_linux_amd64/circleci
+            sudo mv /tmp/circleci-cli_0.1.3139_linux_amd64/circleci /usr/local/bin
             circleci version
             echo "Run circleci help"              
             circleci help
