@@ -99,7 +99,7 @@ commands:
               --arg refUri "${CIRCLE_REPOSITORY_URL}/tree/${CIRCLE_BRANCH}" \
               --arg repositoryUri "${CIRCLE_REPOSITORY_URL}" \
               --arg branchName "${CIRCLE_BRANCH}" \
-              --arg pipelineId "${CIRCLE_WORKFLOW_ID}" \
+              --arg pipelineId "${CIRCLE_WORKFLOW_ID}-{CIRCLE_BUILD_NUM}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
               --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
@@ -110,12 +110,11 @@ commands:
                 "builds": [
                   {
                     "schemaVersion": "1.0",
-                    "pipelineId": $pipelineId,
+                    "pipelineId": $repoName,
                     "buildNumber": $buildNumber,
-                    "updateSequenceNumber": $time_num,
+                    "updateSequenceNumber": 1,
                     "displayName": $display,
                     "description": $description,
-                    "label": "CircleCI",
                     "url": $url,
                     "state": $state, 
                     "lastUpdated": $lastUpdated,
