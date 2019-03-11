@@ -80,7 +80,7 @@ commands:
                 VCS_TYPE=bitbucket
               fi
               echo "Attempt to get Jira Issues from  https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM"
-              curl <<# parameters.token_name >> --user "$<<parameters.token_name>>:" <</parameters.token_name>> \
+              curl -s <<# parameters.token_name >> --user "$<<parameters.token_name>>:" <</parameters.token_name>> \
               -o /tmp/job_info.json \
               https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
@@ -152,7 +152,7 @@ commands:
             
             post_to_jira () {
               echo "Associating build with $ISSUE_KEYS on ${base_url}"
-              HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/curl_response.txt \
+              HTTP_STATUS=$(curl -s -w "%{http_code}" -o /tmp/curl_response.txt \
               -H "Authorization: JWT ${jwt_token}" \
               -H "Content-Type: application/json" \
               -H "Accept: application/json" \
@@ -160,7 +160,7 @@ commands:
 
               cat /tmp/curl_response.txt
 
-              if [ "${HTTP_STATUS}" !- "202" ];then 
+              if [ "${HTTP_STATUS}" != "202" ];then 
                 echo "Error calling Jira, result: ${HTTP_STATUS}"
                 exit 1
               else
