@@ -28,6 +28,18 @@ function setup {
 
 }
 
+@test "Basic expansion includes API token when set" {
+  # given
+  process_config_with tests/cases/simple_with_circle_token.yml
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 4
+  assert_jq_match '.jobs["build"].steps[0].run.command' 'echo "hello"'
+  assert_jq_match '.jobs["build"].steps[3].run.name' 'Update status in Atlassian Jira'
+  assert_jq_contains '.jobs["build"].steps[3].run.command' '${MY_CIRCLE_TOKEN}'
+}
+
 
 
 

@@ -37,7 +37,7 @@ commands:
         type: string
       token_name:
         description: The name of environment variable containing CircleCI API. Only required if private project
-        default: "CIRCLE_TOKEN"
+        default: ""
         type: string
     steps:
       - run:
@@ -80,9 +80,10 @@ commands:
                 VCS_TYPE=bitbucket
               fi
               echo "Attempt to get Jira Issues from  https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM"
-              curl -s <<# parameters.token_name >> --user "$<<parameters.token_name>>:" <</parameters.token_name>> \
+              curl -s <<# parameters.token_name >> --user "${<<parameters.token_name>>}:" <</parameters.token_name>> \
               -o /tmp/job_info.json \
               https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM
+              # see https://jqplay.org/s/TNq7c5ctot
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
             }
 
