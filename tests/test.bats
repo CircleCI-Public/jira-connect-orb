@@ -34,22 +34,20 @@ function setup {
 @test "Execution of Notify Script Works with env vars" {
 
   # given a test instance with valid secret
-  export CONNECT_SECRET="${CONNECT_SECRET}"
+  export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
   export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
 
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="64983647689364"
-  export CIRCLE_BUILD_NUM="9"
+  export CIRCLE_BUILD_NUM="296"
   export CIRCLE_JOB="lint"
-  export CIRCLE_PROJECT_USERNAME="eddie"
+  export CIRCLE_PROJECT_USERNAME="eddiewebb"
   export CIRCLE_SHA1="aef3425"
-  export CIRCLE_PROJECT_USERNAME="eddie"
-  export CIRCLE_PROJECT_USERNAME="eddie"
-  export CIRCLE_PROJECT_REPONAME="ios-app"
+  export CIRCLE_PROJECT_REPONAME="circleci-samples"
   export CIRCLE_REPOSITORY_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
-  export CIRCLE_BRANCH="feature-123"
+  export CIRCLE_BRANCH="master"
   export JIRA_BUILD_STATUS="successful"
   process_config_with tests/cases/simple.yml
 

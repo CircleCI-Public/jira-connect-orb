@@ -1,7 +1,8 @@
 version: 2.1
 
 description: Reports job status back to Atlassian JIRA instance using Atlassian Connect. 
-  Must install [APp NAME] from Atlassian Marketplace, and provide the proper ENV VARs.
+  Must install [Ap NAME] from Atlassian Marketplace, and provide the proper ENV VARs.
+  SharedSecret must be exposed as ATLASSIAN_CONNECT_SECRET
 
 
 
@@ -33,6 +34,10 @@ commands:
       base_url:
         description: The base Url for your Atlassian Jira Cloud instance. If omitted the env. variable ${JIRA_BASE_URL} is used.
         default: "${JIRA_BASE_URL}"
+        type: string
+      token_name:
+        description: The name of environment variable containing CircleCI API. Only required if private project
+        default: "CIRCLE_TOKEN"
         type: string
     steps:
       - run:
@@ -68,8 +73,17 @@ commands:
             }
 
             parse_jira_key_array () {
-              echo "WARN: This is using static "
-              ISSUE_KEYS='["CC-4"]'
+              # must save as ISSUE_KEYS='["CC-4"]'
+              if [[ $(echo $CIRCLE_REPOSITORY_URL | grep github.com) ]]; then
+                VCS_TYPE=github
+              else
+                VCS_TYPE=bitbucket
+              fi
+              echo "Attempt to get Jira Issues from  https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM"
+              curl <<# parameters.token_name >> --user "$<<parameters.token_name>>:" <</parameters.token_name>> \
+              -o /tmp/job_info.json \
+              https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM
+              ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
             }
 
             generate_json_payload () {
@@ -137,7 +151,7 @@ commands:
 
             
             post_to_jira () {
-              echo "Associating build with $ISSUE_KEYS on {base_url}${cannonical}"
+              echo "Associating build with $ISSUE_KEYS on ${base_url}"
               HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/curl_response.txt \
               -H "Authorization: JWT ${jwt_token}" \
               -H "Content-Type: application/json" \
