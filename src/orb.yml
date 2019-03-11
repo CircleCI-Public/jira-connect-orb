@@ -51,60 +51,31 @@ commands:
           when: always
           name: Update status in Atlassian Jira
           command: |
-            ISSUE_KEYS='["CC-4"]'
             base_url="<<parameters.base_url>>"
             cannonical="/rest/builds/0.1/bulk"
             app_key="circleci.jira.buildsbeta"
-            secret="${CONNECT_SECRET}"
-            # Dont chamge anything else
-            query_string="POST&${cannonical}&"
-            header='{
-              "typ": "JWT",
-              "alg": "HS256"
-            }'
-            # Use jq to set the dynamic `qsh`, `iat` and `exp`
-            # fields on the header using the current time.
-            # For more on "qsh" see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
-            qsh=$(printf %s "$query_string" | openssl dgst -sha256 | cut -d" " -f2)
-            claims=$(
-              echo "{}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" --arg iss "$app_key" \
-              '
-              ($time_str | tonumber) as $time_num
-              | .iat=($time_num - 600)
-              | .exp=($time_num + 600)
-              | .qsh=$qsh
-              | .iss=$iss
-              '
-            )
+            secret="${ATLASSIAN_CONNECT_SECRET}"
 
-            base64_encode()
-            {
-              declare input=${1:-$(</dev/stdin)}
-              # Use `tr` to URL encode the output from base64.
-              printf '%s' "${input}" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'
+            run () {
+              parse_jira_key_array
+              if [ "x" != "x${ISSUE_KEYS}" ]; then
+                generate_json_payload
+                generate_jwt_token
+                post_to_jira
+              else
+                echo "No Jira issue keys found in changelog"
+              fi
             }
 
-            json() {
-              declare input=${1:-$(</dev/stdin)}
-              printf '%s' "${input}" | jq -c .
+            parse_jira_key_array () {
+              echo "WARN: This is using static "
+              ISSUE_KEYS='["CC-4"]'
             }
 
-            hmacsha256_sign()
-            {
-              declare input=${1:-$(</dev/stdin)}
-              printf '%s' "${input}" | openssl dgst -binary -sha256 -hmac "${secret}"
-            }
-
-            header_base64=$(echo "${header}" | json | base64_encode)
-            claims_base64=$(echo "${claims}" | json | base64_encode)
-
-            signing_input=$(echo "${header_base64}.${claims_base64}")
-            signature=$(echo "${signing_input}" | hmacsha256_sign | base64_encode)
-            jwt_token="${signing_input}.${signature}"
-
-            time_now=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
-             echo {} | jq \
-              --arg lastUpdated "${time_now}" \
+            generate_json_payload () {
+              iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
+              echo {} | jq \
+              --arg lastUpdated "${iso_time}" \
               --arg state "${JIRA_BUILD_STATUS}" \
               --arg jobName "${CIRCLE_JOB}" \
               --arg buildNumber "${CIRCLE_BUILD_NUM}" \
@@ -136,19 +107,81 @@ commands:
                   }
                 ]
               }
-              ' > jira-status.json
+              ' > /tmp/jira-status.json
+            }
+
+            generate_jwt_token () {
+              generate_query_string_hash
+              header='{
+                "typ": "JWT",
+                "alg": "HS256"
+              }'
+              claims=$(
+                echo "{}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" --arg iss "$app_key" \
+                '
+                ($time_str | tonumber) as $time_num
+                | .iat=($time_num - 600)
+                | .exp=($time_num + 600)
+                | .qsh=$qsh
+                | .iss=$iss
+                '
+              )
+              header_base64=$(echo "${header}" | json | base64_encode)
+              claims_base64=$(echo "${claims}" | json | base64_encode)
+
+              signing_input=$(echo "${header_base64}.${claims_base64}")
+              signature=$(echo "${signing_input}" | hmacsha256_sign | base64_encode)
+              jwt_token="${signing_input}.${signature}"
+
+            }
+
             
+            post_to_jira () {
+              echo "Associating build with $ISSUE_KEYS on {base_url}${cannonical}"
+              HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/curl_response.txt \
+              -H "Authorization: JWT ${jwt_token}" \
+              -H "Content-Type: application/json" \
+              -H "Accept: application/json" \
+              -X POST "${base_url}${cannonical}" --data @/tmp/jira-status.json)
+
+              cat /tmp/curl_response.txt
+
+              if [ "${HTTP_STATUS}" !- "202" ];then 
+                echo "Error calling Jira, result: ${HTTP_STATUS}"
+                exit 1
+              else
+                echo "Success!"
+              fi
+            }
+
+            generate_query_string_hash () {
+              query_string="POST&${cannonical}&"
+              # Use jq to set the dynamic `qsh`, `iat` and `exp`
+              # fields on the header using the current time.
+              # For more on "qsh" see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
+              qsh=$(printf %s "$query_string" | openssl dgst -sha256 | cut -d" " -f2)   
+            }
 
 
+            base64_encode()
+            {
+              declare input=${1:-$(</dev/stdin)}
+              # Use `tr` to URL encode the output from base64.
+              printf '%s' "${input}" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'
+            }
+
+            json() {
+              declare input=${1:-$(</dev/stdin)}
+              printf '%s' "${input}" | jq -c .
+            }
+
+            hmacsha256_sign()
+            {
+              declare input=${1:-$(</dev/stdin)}
+              printf '%s' "${input}" | openssl dgst -binary -sha256 -hmac "${secret}"
+            }
 
 
-            res=`curl -o /dev/null -w "%{http_code}" \
-            -H "Authorization: JWT ${jwt_token}" \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -X POST "${base_url}${cannonical}" --data @jira-status.json`
+            run 
 
-            if [ $res -ne 202 ];then 
-              echo "Error calling Jira"
-              exit 1
-            fi
+
