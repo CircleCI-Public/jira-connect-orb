@@ -89,6 +89,7 @@ commands:
             generate_json_payload () {
               iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
               echo {} | jq \
+              --arg time_str "$(date +%s)" \
               --arg lastUpdated "${iso_time}" \
               --arg state "${JIRA_BUILD_STATUS}" \
               --arg jobName "${CIRCLE_JOB}" \
@@ -104,13 +105,14 @@ commands:
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
               --argjson issueKeys "${ISSUE_KEYS}" \
               '
+              ($time_str | tonumber) as $time_num |
               {
                 "builds": [
                   {
                     "schemaVersion": "1.0",
                     "pipelineId": $pipelineId,
                     "buildNumber": $buildNumber,
-                    "updateSequenceNumber": 0,
+                    "updateSequenceNumber": $time_num,
                     "displayName": $display,
                     "description": $description,
                     "label": "CircleCI",
