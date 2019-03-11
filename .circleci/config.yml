@@ -31,7 +31,8 @@ jobs:
       - image: circleci/node:10
     working_directory: ~/repo
     steps:
-      - dark/notify
+      - dark/notify:
+          token_name: "CIRCLECI_API_KEY"
 
 
 
