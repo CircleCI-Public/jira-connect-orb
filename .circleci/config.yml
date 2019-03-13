@@ -3,7 +3,10 @@ workflows:
   build-deploy:
     jobs:
       - test-locally
-      - test-dev
+      - test-dev-build
+      - test-dev-deploy:
+          requires:
+            - test-dev-build
 
 orbs:
   dark: eddiewebb/burps@dev:eddie
@@ -26,13 +29,24 @@ jobs:
           name: Import Tests using BATS
           command: |
             bats tests
-  test-dev:
+  test-dev-build:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
     steps:
       - dark/notify:
           token_name: "CIRCLECI_API_KEY"
+
+  test-dev-deploy:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - dark/notify:
+          token_name: "CIRCLECI_API_KEY"
+          job_type: deployment
+          environment: Prod-US-East
+          environment_type: production
 
 
 
