@@ -48,9 +48,6 @@ jobs:
           environment: Prod-US-East
           environment_type: production
 
-
-
-
 commands:
   install-bats:
     description: installs the BATS bash testing tool
