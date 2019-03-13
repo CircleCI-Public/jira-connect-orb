@@ -128,7 +128,7 @@ commands:
                     "schemaVersion": "1.0",
                     "pipelineId": $workflowId,
                     "buildNumber": $buildNumber,
-                    "updateSequenceNumber": 1,
+                    "updateSequenceNumber": $time_num,
                     "displayName": $display,
                     "description": $description,
                     "url": $workflowUrl,
