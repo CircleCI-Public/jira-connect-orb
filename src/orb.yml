@@ -110,6 +110,7 @@ commands:
               --arg jobName "${CIRCLE_JOB}" \
               --arg buildNumber "${CIRCLE_BUILD_NUM}" \
               --arg url "${CIRCLE_BUILD_URL}" \
+              --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
               --arg commit "${CIRCLE_SHA1}" \
               --arg refUri "${CIRCLE_REPOSITORY_URL}/tree/${CIRCLE_BRANCH}" \
               --arg repositoryUri "${CIRCLE_REPOSITORY_URL}" \
@@ -125,12 +126,12 @@ commands:
                 "builds": [
                   {
                     "schemaVersion": "1.0",
-                    "pipelineId": $repoName,
+                    "pipelineId": $workflowId,
                     "buildNumber": $buildNumber,
                     "updateSequenceNumber": 1,
                     "displayName": $display,
                     "description": $description,
-                    "url": $url,
+                    "url": $workflowUrl,
                     "state": $state, 
                     "lastUpdated": $lastUpdated,
                     "issueKeys": $issueKeys
@@ -157,7 +158,8 @@ commands:
               --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
               --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-              --arg display "#${CIRCLE_BUILD_NUM}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
+              --arg pipelineDisplay "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
+              --arg deployDisplay "#${CIRCLE_BUILD_NUM}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB} <<parameters.environment>>" \
               --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
               --arg envName "<<parameters.environment>>" \
@@ -171,15 +173,14 @@ commands:
                     "schemaVersion": "1.0",
                     "pipeline": {
                       "id": $workflowId,
-                      "displayName": $jobName,
+                      "displayName": $pipelineDisplay,
                       "url": $workflowUrl
                     },
                     "deploymentSequenceNumber": $buildNumber,
                     "updateSequenceNumber": 1,
-                    "displayName": $display,
+                    "displayName": $deployDisplay,
                     "description": $description,
                     "url": $url,
-                    "label": $display,
                     "state": $state, 
                     "lastUpdated": $lastUpdated,
                     "issueKeys": $issueKeys,
