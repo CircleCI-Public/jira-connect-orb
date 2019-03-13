@@ -1,0 +1,10 @@
+jobs:
+  build:
+    jobs:
+    docker:
+    - image: circleci/node:10
+    steps:
+      - run: echo "hello"
+      - jira/notify:
+          job_type: deployment
+          environment: non-prod

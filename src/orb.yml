@@ -39,6 +39,20 @@ commands:
         description: The name of environment variable containing CircleCI API. Only required if private project
         default: ""
         type: string
+      job_type:
+        description: Indicates if job should be treated as build or deployment in Jira dev panel. Note that Deployments require additional details
+        default: "build"
+        type: enum
+        enum: ["build", "deployment"]
+      environment:
+        description: For deployments. Indicates the name of target environment
+        default: "Dev1"
+        type: string
+      environment_type:
+        description: Indicates the category of target environment as defined by Atlassian
+        type: enum
+        enum: ["production", "staging", "testing", "development", "unmapped"]
+        default: "development"
     steps:
       - run:
           name: JIRA - Setting Failure Condition
@@ -57,14 +71,14 @@ commands:
           name: Update status in Atlassian Jira
           command: |
             base_url="<<parameters.base_url>>"
-            cannonical="/rest/builds/0.1/bulk"
+            cannonical="/rest/<<parameters.job_type>>s/0.1/bulk"
             app_key="circleci.jira.buildsbeta"
             secret="${ATLASSIAN_CONNECT_SECRET}"
 
             run () {
               parse_jira_key_array
               if [ "x" != "x${ISSUE_KEYS}" ]; then
-                generate_json_payload
+                generate_json_payload_<<parameters.job_type>>
                 generate_jwt_token
                 post_to_jira
               else
@@ -87,7 +101,7 @@ commands:
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
             }
 
-            generate_json_payload () {
+            generate_json_payload_build () {
               iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
               echo {} | jq \
               --arg time_str "$(date +%s)" \
@@ -100,7 +114,7 @@ commands:
               --arg refUri "${CIRCLE_REPOSITORY_URL}/tree/${CIRCLE_BRANCH}" \
               --arg repositoryUri "${CIRCLE_REPOSITORY_URL}" \
               --arg branchName "${CIRCLE_BRANCH}" \
-              --arg pipelineId "${CIRCLE_WORKFLOW_ID}-{CIRCLE_BUILD_NUM}" \
+              --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
               --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
@@ -120,6 +134,60 @@ commands:
                     "state": $state, 
                     "lastUpdated": $lastUpdated,
                     "issueKeys": $issueKeys
+                  }
+                ]
+              }
+              ' > /tmp/jira-status.json
+            }
+
+
+            generate_json_payload_deployment () {
+              iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
+              echo {} | jq \
+              --arg time_str "$(date +%s)" \
+              --arg lastUpdated "${iso_time}" \
+              --arg state "${JIRA_BUILD_STATUS}" \
+              --arg jobName "${CIRCLE_JOB}" \
+              --arg buildNumber "${CIRCLE_BUILD_NUM}" \
+              --arg url "${CIRCLE_BUILD_URL}" \
+              --arg commit "${CIRCLE_SHA1}" \
+              --arg refUri "${CIRCLE_REPOSITORY_URL}/tree/${CIRCLE_BRANCH}" \
+              --arg repositoryUri "${CIRCLE_REPOSITORY_URL}" \
+              --arg branchName "${CIRCLE_BRANCH}" \
+              --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
+              --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
+              --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
+              --arg display "#${CIRCLE_BUILD_NUM}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
+              --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB} <<parameters.environment>>" \
+              --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
+              --arg envName "<<parameters.environment>>" \
+              --arg envType "<<parameters.environment_type>>" \
+              --argjson issueKeys "${ISSUE_KEYS}" \
+              '
+              ($time_str | tonumber) as $time_num |
+              {
+                "deployments": [
+                  {
+                    "schemaVersion": "1.0",
+                    "pipeline": {
+                      "id": $workflowId,
+                      "displayName": $jobName,
+                      "url": $workflowUrl
+                    },
+                    "deploymentSequenceNumber": $buildNumber,
+                    "updateSequenceNumber": 1,
+                    "displayName": $display,
+                    "description": $description,
+                    "url": $url,
+                    "label": $display,
+                    "state": $state, 
+                    "lastUpdated": $lastUpdated,
+                    "issueKeys": $issueKeys,
+                    "environment":{
+                      "id": $envId,
+                      "displayName": $envName,
+                      "type": $envType
+                    }
                   }
                 ]
               }
