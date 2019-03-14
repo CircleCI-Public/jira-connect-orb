@@ -36,8 +36,8 @@ commands:
         default: "${JIRA_BASE_URL}"
         type: string
       token_name:
-        description: The name of environment variable containing CircleCI API. Only required if private project
-        default: ""
+        description: The name of environment variable containing CircleCI API Token. Required for all projects.
+        default: "CIRCLE_TOKEN"
         type: string
       job_type:
         description: Indicates if job should be treated as build or deployment in Jira dev panel. Note that Deployments require additional details
@@ -70,14 +70,18 @@ commands:
           when: always
           name: Update status in Atlassian Jira
           command: |
+            : ${<<parameters.token_name>>:?"Required Env Variable not found!"}
+            : ${ATLASSIAN_CONNECT_SECRET:?"Required Env Variable not found!"}
             base_url="<<parameters.base_url>>"
             cannonical="/rest/<<parameters.job_type>>s/0.1/bulk"
             app_key="circleci.jira.buildsbeta"
             secret="${ATLASSIAN_CONNECT_SECRET}"
 
+
             run () {
               parse_jira_key_array
               if [ "x" != "x${ISSUE_KEYS}" ]; then
+                check_workflow_status
                 generate_json_payload_<<parameters.job_type>>
                 generate_jwt_token
                 post_to_jira
@@ -99,6 +103,27 @@ commands:
               https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM
               # see https://jqplay.org/s/TNq7c5ctot
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
+            }
+
+            check_workflow_status () {
+              if [ "<<parameters.job_type>>" != "deployment" ]; then
+                  # we only apply this to builds, deployments are single focus
+                if [ "${JIRA_BUILD_STATUS}" != "failed" ]; then
+                  # this job is passing, BUT we need to
+                  # make sure no other jobs have already failed
+                   WORKFLOW_STATUS=$(curl -s https://circleci.com/graphql-unstable \
+                  -H "Authorization: ${<<parameters.token_name>>}" \
+                  -X POST \
+                  -H 'Content-Type: application/json' \
+                  -d '{"query":"{\n\tworkflow(id:\"'${CIRCLE_WORKFLOW_ID}'\"){\n    status\n  }\n}","variables":null}' | jq -r '.data.workflow.status')
+                  echo "Job is passing, workflow is ${WORKFLOW_STATUS}"
+                  if [[ "$WORKFLOW_STATUS" == "FAIL"* ]]; then
+                    # workflow will be "FAILING" when still running and any jobs are failed state
+                    # overide the status set for this passing job.
+                    export JIRA_BUILD_STATUS="failed"
+                  fi
+                fi
+              fi  
             }
 
             generate_json_payload_build () {
