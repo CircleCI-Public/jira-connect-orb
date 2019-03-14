@@ -2,11 +2,11 @@
 	"builds": [
     {
       "schemaVersion": "1.0",
-      "pipelineId": "27f5dffa-7f6e-4da6-8390-f3305f865",
-      "buildNumber": 67,
-      "updateSequenceNumber": 2,
-      "displayName": "Studio Light #66",
-      "description": "Build #66: Passes",
+      "pipelineId": "f3ac82bf-4db4-468f-b019-44757256c112",
+      "buildNumber": 1,
+      "updateSequenceNumber": 1,
+      "displayName": "Build #1",
+      "description": "Build #1 passed",
       "label": "CircleCI",
       "url": "https://circleci.com/gh/eddiewebb/studio-light/66",
       "state": "successful", 
