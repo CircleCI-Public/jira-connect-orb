@@ -5,7 +5,7 @@
 # Original from https://willhaley.com/blog/generate-jwt-with-bash/, modified for Atlassian Connect
 #
 app_key="circleci.jira.buildsbeta"
-secret="${CONNECT_SECRET}"
+secret="${ATLASSIAN_CONNECT_SECRET}"
 
 USAGE=$(cat <<-END
     returns a JWT token valid for POST ops to the Build Status Bulk Upload API
