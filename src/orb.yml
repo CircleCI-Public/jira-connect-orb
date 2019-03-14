@@ -70,8 +70,8 @@ commands:
           when: always
           name: Update status in Atlassian Jira
           command: |
-            : ${<<parameters.token_name>>:?"Required Env Variable not found!"}
-            : ${ATLASSIAN_CONNECT_SECRET:?"Required Env Variable not found!"}
+            : ${<<parameters.token_name>>:?"Required Env Variable not found!"} >&2
+            : ${ATLASSIAN_CONNECT_SECRET:?"Required Env Variable not found!"} >&2
             base_url="<<parameters.base_url>>"
             cannonical="/rest/<<parameters.job_type>>s/0.1/bulk"
             app_key="circleci.jira.buildsbeta"
@@ -257,7 +257,7 @@ commands:
               cat /tmp/curl_response.txt
 
               if [ "${HTTP_STATUS}" != "202" ];then 
-                echo "Error calling Jira, result: ${HTTP_STATUS}"
+                echo "Error calling Jira, result: ${HTTP_STATUS}" >&2
                 exit 1
               else
                 echo "Success!"
