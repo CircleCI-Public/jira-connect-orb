@@ -4,7 +4,7 @@
 # JWT Encoder Bash Script 
 # Original from https://willhaley.com/blog/generate-jwt-with-bash/, modified for Atlassian Connect
 #
-app_key="circleci.jira.buildsbeta"
+app_key="projectfrank.circleci.jira"
 secret="${ATLASSIAN_CONNECT_SECRET}"
 
 USAGE=$(cat <<-END

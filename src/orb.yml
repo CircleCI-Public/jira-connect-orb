@@ -248,7 +248,9 @@ commands:
             
             post_to_jira () {
               echo "Associating build with $ISSUE_KEYS on ${base_url}"
-              HTTP_STATUS=$(curl -s -w "%{http_code}" -o /tmp/curl_response.txt \
+              # JIra randomly returns 401 with what should be valid tokens, so rety 3 times.
+              HTTP_STATUS=$(curl --retry 3 \
+              -s -w "%{http_code}" -o /tmp/curl_response.txt \
               -H "Authorization: JWT ${jwt_token}" \
               -H "Content-Type: application/json" \
               -H "Accept: application/json" \
