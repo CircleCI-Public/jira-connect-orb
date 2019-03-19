@@ -3,6 +3,10 @@
 Updates the status of JIRA tickets as related commits building in CircleCI pass/fail.
 
 
+## Setup
+This Orb uses the existing Atlassian Jira token that can be configured for CircleCI Projects.
+
+
 ## Example
 
 `git commit -m"Working on CIRCLE-1223"`
@@ -11,12 +15,6 @@ Updates the status of JIRA tickets as related commits building in CircleCI pass/
 ![Jira developer panel with CircleCI build info](/assets/dev_panel_details.png)
 
 
-
-## Needs
-
-- The `sharedSecret` created during initial Atlassian Connect Install
-- baseURL for their cloud instance (also provided to app during install)
-- atlassian-connect.json updates (include [build module](https://developer.atlassian.com/cloud/jira/software/modules/build/))
 
 
 
