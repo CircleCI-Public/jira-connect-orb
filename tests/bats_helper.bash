@@ -3,7 +3,7 @@
 
 function append_project_configuration {
 	if [ -z "$BATS_IMPORT_DEV_ORB" ]; then
-		echo "#Using \`inline\` orb assembly, to test against published orb, set BATS_IMPORT_DEV_ORB to fully qualified path" >&3
+		#echo "#Using \`inline\` orb assembly, to test against published orb, set BATS_IMPORT_DEV_ORB to fully qualified path" >&3
 		assemble_inline $1
 	else
 		echo "#BATS_IMPORT_DEV_ORB env var is set, all config will be tested against imported orb $BATS_IMPORT_DEV_ORB" >&3

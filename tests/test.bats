@@ -122,3 +122,38 @@ function setup {
 }
 
 
+
+@test "Workflow Status of Fail will override passing job" {
+  # given a test instance with valid secret
+  export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
+  export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
+
+  # and the infomprovied by a CCI container
+  export CIRCLE_WORKFLOW_ID="29ac9db7-35d5-4c31-b486-96d47c8b794f"
+  export CIRCLE_BUILD_NUM="358"
+  export CIRCLE_JOB="passing"
+  export CIRCLE_PROJECT_USERNAME="eddiewebb"
+  export CIRCLE_SHA1="aef3425"
+  export CIRCLE_PROJECT_REPONAME="circleci-samples"
+  export CIRCLE_REPOSITORY_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
+  export CIRCLE_BRANCH="master"
+  export JIRA_BUILD_STATUS="successful"
+  process_config_with tests/cases/simple.yml
+
+
+  # when out command is called
+  jq -r '.jobs["build"].steps[3].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  
+  # then is passes
+  [[ "$status" == "0" ]]
+
+  # and reports success
+  assert_contains_text '"acceptedBuilds":[{'  # acc Deployments has one object
+  assert_contains_text '"rejectedBuilds":[]'  #rejecte does not
+  assert_contains_text "workflow is FAILED"
+}
+
+
