@@ -2,16 +2,16 @@ version: 2.1
 workflows:
   build-deploy:
     jobs:
-      - test-locally
+      - dev-version
       - publish:
           requires:
-            - test-locally
+            - dev-version
           filters:
             branches:
               only: master
 
 jobs:
-  test-locally:
+  dev-version:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
