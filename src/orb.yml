@@ -41,8 +41,8 @@ commands:
         type: enum
         enum: ["build", "deployment"]
       environment:
-        description: For deployments. Indicates the name of target environment
-        default: "Dev1"
+        description: For deployments. Indicates the name of target environment. Default is the CircleCI Job Name.
+        default: "${CIRCLE_JOB}"
         type: string
       environment_type:
         description: Indicates the category of target environment as defined by Atlassian
@@ -160,7 +160,6 @@ commands:
               --arg time_str "$(date +%s)" \
               --arg lastUpdated "${iso_time}" \
               --arg state "${JIRA_BUILD_STATUS}" \
-              --arg jobName "${CIRCLE_JOB}" \
               --arg buildNumber "${CIRCLE_BUILD_NUM}" \
               --arg url "${CIRCLE_BUILD_URL}" \
               --arg commit "${CIRCLE_SHA1}" \
