@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-
+# ./jiraProxy.sh build|deployment <file>
 
 curl \
 -w "%{http_code}" \
