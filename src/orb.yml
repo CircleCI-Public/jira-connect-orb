@@ -119,6 +119,7 @@ commands:
               echo {} | jq \
               --arg time_str "$(date +%s)" \
               --arg lastUpdated "${iso_time}" \
+              --arg pipeline "${CIRCLE_PROJECT_REPONAME}" \
               --arg state "${JIRA_BUILD_STATUS}" \
               --arg jobName "${CIRCLE_JOB}" \
               --arg buildNumber "${CIRCLE_BUILD_NUM}" \
@@ -139,9 +140,9 @@ commands:
                 "builds": [
                   {
                     "schemaVersion": "1.0",
-                    "pipelineId": $workflowId,
+                    "pipelineId": $pipeline,
                     "buildNumber": $buildNumber,
-                    "updateSequenceNumber": $time_num,
+                    "updateSequenceNumber": $iso_time,
                     "displayName": $display,
                     "description": $description,
                     "url": $workflowUrl,
