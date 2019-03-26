@@ -2,19 +2,18 @@
 	"builds": [
     {
       "schemaVersion": "1.0",
-      "pipelineId": "f3ac82bf-4db4-468f-b019-44757256c115",
-      "buildNumber": 2,
-      "updateSequenceNumber": 2,
-      "displayName": "Build #1",
-      "description": "Build #1 passed",
+      "pipelineId": "circleci-samples",
+      "buildNumber": 6,
+      "updateSequenceNumber": 6,
+      "displayName": "circleci-samples b6, u6",
+      "description": "circleci-samples",
       "label": "CircleCI",
       "url": "https://circleci.com/workflow-run/f3ac82bf-4db4-468f-b019-44757256c115",
       "state": "successful", 
-      "lastUpdated": "2018-01-20T23:27:25+00:00",
+      "lastUpdated": "2019-03-24T23:27:25+00:00",
       "issueKeys": [
-        "CC-6"
+        "CC-14"
       ]
     }
   ]
-
 }

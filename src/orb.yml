@@ -131,7 +131,7 @@ commands:
               --arg branchName "${CIRCLE_BRANCH}" \
               --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-              --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
+              --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME}"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
               --argjson issueKeys "${ISSUE_KEYS}" \
               '
@@ -141,8 +141,8 @@ commands:
                   {
                     "schemaVersion": "1.0",
                     "pipelineId": $pipeline,
-                    "buildNumber": $buildNumber,
-                    "updateSequenceNumber": $iso_time,
+                    "buildNumber": 1,
+                    "updateSequenceNumber": $buildNumber,
                     "displayName": $display,
                     "description": $description,
                     "url": $workflowUrl,
@@ -170,7 +170,7 @@ commands:
               --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
               --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-              --arg pipelineDisplay "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
+              --arg pipelineDisplay "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME}"  \
               --arg deployDisplay "#${CIRCLE_BUILD_NUM}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB} <<parameters.environment>>" \
               --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
@@ -184,7 +184,7 @@ commands:
                   {
                     "schemaVersion": "1.0",
                     "pipeline": {
-                      "id": $workflowId,
+                      "id": $repoName,
                       "displayName": $pipelineDisplay,
                       "url": $workflowUrl
                     },
