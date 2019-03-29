@@ -4,37 +4,9 @@ description: Reports job status back to Atlassian JIRA instance using Atlassian 
   Must install [Ap NAME] from Atlassian Marketplace, and provide the proper ENV VARs.
   SharedSecret must be exposed as ATLASSIAN_CONNECT_SECRET
 
-
-
-examples:
-  basic_workflow:
-    description: Notify Atlassian for each job.
-    usage:
-      version: 2.1
-      orbs: 
-        jira: circleci/jira@volatile
-
-      workflows:
-        build:
-          jobs:
-            - build:
-                post-steps:
-                  - jira/notify
-
-      jobs:
-        build:
-          docker:
-          - image: circleci/node:10
-          steps:
-            - run: echo "hello"
-
 commands:
   notify:
     parameters:
-      base_url:
-        description: The base Url for your Atlassian Jira Cloud instance. If omitted the env. variable ${JIRA_BASE_URL} is used.
-        default: "${JIRA_BASE_URL}"
-        type: string
       token_name:
         description: The name of environment variable containing CircleCI API Token. Required for all projects.
         default: "CIRCLE_TOKEN"
@@ -45,8 +17,8 @@ commands:
         type: enum
         enum: ["build", "deployment"]
       environment:
-        description: For deployments. Indicates the name of target environment
-        default: "Dev1"
+        description: For deployments. Indicates the name of target environment. Default is the CircleCI Job Name.
+        default: "${CIRCLE_JOB}"
         type: string
       environment_type:
         description: Indicates the category of target environment as defined by Atlassian
@@ -70,20 +42,18 @@ commands:
           when: always
           name: Update status in Atlassian Jira
           command: |
-            : ${<<parameters.token_name>>:?"Required Env Variable not found!"} >&2
-            : ${ATLASSIAN_CONNECT_SECRET:?"Required Env Variable not found!"} >&2
-            base_url="<<parameters.base_url>>"
-            cannonical="/rest/<<parameters.job_type>>s/0.1/bulk"
-            app_key="circleci.jira.buildsbeta"
-            secret="${ATLASSIAN_CONNECT_SECRET}"
-
+            : ${<<parameters.token_name>>:?"Please provide a CircleCI API token for this orb to work!"} >&2
+            if [[ $(echo $CIRCLE_REPOSITORY_URL | grep github.com) ]]; then
+              VCS_TYPE=github
+            else
+              VCS_TYPE=bitbucket
+            fi
 
             run () {
               parse_jira_key_array
               if [ "x" != "x${ISSUE_KEYS}" ]; then
                 check_workflow_status
                 generate_json_payload_<<parameters.job_type>>
-                generate_jwt_token
                 post_to_jira
               else
                 echo "No Jira issue keys found in changelog"
@@ -92,22 +62,16 @@ commands:
 
             parse_jira_key_array () {
               # must save as ISSUE_KEYS='["CC-4"]'
-              if [[ $(echo $CIRCLE_REPOSITORY_URL | grep github.com) ]]; then
-                VCS_TYPE=github
-              else
-                VCS_TYPE=bitbucket
-              fi
-              echo "Attempt to get Jira Issues from  https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM"
+              echo "Attempt to get Jira Issues from  https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}"
               curl -s <<# parameters.token_name >> --user "${<<parameters.token_name>>}:" <</parameters.token_name>> \
               -o /tmp/job_info.json \
-              https://circleci.com/api/v1.1/project/$VCS_TYPE/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BUILD_NUM
+              https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}
               # see https://jqplay.org/s/TNq7c5ctot
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
             }
 
             check_workflow_status () {
               if [ "<<parameters.job_type>>" != "deployment" ]; then
-                  # we only apply this to builds, deployments are single focus
                 if [ "${JIRA_BUILD_STATUS}" != "failed" ]; then
                   # this job is passing, BUT we need to
                   # make sure no other jobs have already failed
@@ -123,7 +87,7 @@ commands:
                     export JIRA_BUILD_STATUS="failed"
                   fi
                 fi
-              fi  
+              fi
             }
 
             generate_json_payload_build () {
@@ -131,6 +95,7 @@ commands:
               echo {} | jq \
               --arg time_str "$(date +%s)" \
               --arg lastUpdated "${iso_time}" \
+              --arg pipeline "${CIRCLE_PROJECT_REPONAME}" \
               --arg state "${JIRA_BUILD_STATUS}" \
               --arg jobName "${CIRCLE_JOB}" \
               --arg buildNumber "${CIRCLE_BUILD_NUM}" \
@@ -142,7 +107,7 @@ commands:
               --arg branchName "${CIRCLE_BRANCH}" \
               --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-              --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
+              --arg display "${CIRCLE_PROJECT_REPONAME}"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
               --argjson issueKeys "${ISSUE_KEYS}" \
               '
@@ -151,9 +116,9 @@ commands:
                 "builds": [
                   {
                     "schemaVersion": "1.0",
-                    "pipelineId": $workflowId,
-                    "buildNumber": $buildNumber,
-                    "updateSequenceNumber": $time_num,
+                    "pipelineId": $pipeline,
+                    "buildNumber": 1,
+                    "updateSequenceNumber": $buildNumber,
                     "displayName": $display,
                     "description": $description,
                     "url": $workflowUrl,
@@ -166,14 +131,12 @@ commands:
               ' > /tmp/jira-status.json
             }
 
-
             generate_json_payload_deployment () {
               iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
               echo {} | jq \
               --arg time_str "$(date +%s)" \
               --arg lastUpdated "${iso_time}" \
               --arg state "${JIRA_BUILD_STATUS}" \
-              --arg jobName "${CIRCLE_JOB}" \
               --arg buildNumber "${CIRCLE_BUILD_NUM}" \
               --arg url "${CIRCLE_BUILD_URL}" \
               --arg commit "${CIRCLE_SHA1}" \
@@ -183,7 +146,7 @@ commands:
               --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
               --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-              --arg pipelineDisplay "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME} - ${CIRCLE_JOB}"  \
+              --arg pipelineDisplay "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME}"  \
               --arg deployDisplay "#${CIRCLE_BUILD_NUM}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB} <<parameters.environment>>" \
               --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
@@ -197,7 +160,7 @@ commands:
                   {
                     "schemaVersion": "1.0",
                     "pipeline": {
-                      "id": $workflowId,
+                      "id": $repoName,
                       "displayName": $pipelineDisplay,
                       "url": $workflowUrl
                     },
@@ -220,45 +183,19 @@ commands:
               ' > /tmp/jira-status.json
             }
 
-            generate_jwt_token () {
-              generate_query_string_hash
-              header='{
-                "typ": "JWT",
-                "alg": "HS256"
-              }'
-              claims=$(
-                echo "{}" | jq --arg time_str "$(date +%s)" --arg qsh "$qsh" --arg iss "$app_key" \
-                '
-                ($time_str | tonumber) as $time_num
-                | .iat=($time_num - 600)
-                | .exp=($time_num + 600)
-                | .qsh=$qsh
-                | .iss=$iss
-                '
-              )
-              header_base64=$(echo "${header}" | json | base64_encode)
-              claims_base64=$(echo "${claims}" | json | base64_encode)
-
-              signing_input=$(echo "${header_base64}.${claims_base64}")
-              signature=$(echo "${signing_input}" | hmacsha256_sign | base64_encode)
-              jwt_token="${signing_input}.${signature}"
-
-            }
-
             
             post_to_jira () {
               echo "Associating build with $ISSUE_KEYS on ${base_url}"
-              # JIra randomly returns 401 with what should be valid tokens, so rety 3 times.
-              HTTP_STATUS=$(curl --retry 3 \
+              HTTP_STATUS=$(curl \
+              -u "${<<parameters.token_name>>}:" \
               -s -w "%{http_code}" -o /tmp/curl_response.txt \
-              -H "Authorization: JWT ${jwt_token}" \
               -H "Content-Type: application/json" \
               -H "Accept: application/json" \
-              -X POST "${base_url}${cannonical}" --data @/tmp/jira-status.json)
+              -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
 
               cat /tmp/curl_response.txt
 
-              if [ "${HTTP_STATUS}" != "202" ];then 
+              if [ "${HTTP_STATUS}" != "200" ];then 
                 echo "Error calling Jira, result: ${HTTP_STATUS}" >&2
                 exit 1
               else
@@ -266,34 +203,8 @@ commands:
               fi
             }
 
-            generate_query_string_hash () {
-              query_string="POST&${cannonical}&"
-              # Use jq to set the dynamic `qsh`, `iat` and `exp`
-              # fields on the header using the current time.
-              # For more on "qsh" see https://developer.atlassian.com/cloud/jira/platform/understanding-jwt/#a-name-qsh-a-creating-a-query-string-hash
-              qsh=$(printf %s "$query_string" | openssl dgst -sha256 | cut -d" " -f2)   
-            }
 
-
-            base64_encode()
-            {
-              declare input=${1:-$(</dev/stdin)}
-              # Use `tr` to URL encode the output from base64.
-              printf '%s' "${input}" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'
-            }
-
-            json() {
-              declare input=${1:-$(</dev/stdin)}
-              printf '%s' "${input}" | jq -c .
-            }
-
-            hmacsha256_sign()
-            {
-              declare input=${1:-$(</dev/stdin)}
-              printf '%s' "${input}" | openssl dgst -binary -sha256 -hmac "${secret}"
-            }
-
-
+            # kick off 
             run 
 
 

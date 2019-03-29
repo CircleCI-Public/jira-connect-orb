@@ -1,0 +1,19 @@
+description: Notify jira on single job
+usage:
+  version: 2.1
+  orbs: 
+    jira: circleci/jira@volatile
+
+  workflows:
+    build:
+      jobs:
+        - build:
+            post-steps:
+              - jira/notify
+
+  jobs:
+    build:
+      docker:
+      - image: circleci/node:10
+      steps:
+        - run: echo "hello"

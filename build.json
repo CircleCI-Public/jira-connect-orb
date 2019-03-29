@@ -2,19 +2,48 @@
 	"builds": [
     {
       "schemaVersion": "1.0",
-      "pipelineId": "f3ac82bf-4db4-468f-b019-44757256c115",
-      "buildNumber": 2,
-      "updateSequenceNumber": 2,
+      "pipelineId": "circleci-samples",
+      "buildNumber": 11,
+      "updateSequenceNumber": 0,
       "displayName": "Build #1",
-      "description": "Build #1 passed",
+      "description": "circleci-samples",
       "label": "CircleCI",
       "url": "https://circleci.com/workflow-run/f3ac82bf-4db4-468f-b019-44757256c115",
       "state": "successful", 
-      "lastUpdated": "2018-01-20T23:27:25+00:00",
+      "lastUpdated": "2019-03-24T23:27:25+00:00",
       "issueKeys": [
-        "CC-6"
+        "CC-19"
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "pipelineId": "circleci-samples",
+      "buildNumber": 12,
+      "updateSequenceNumber": 0,
+      "displayName": "Build #2",
+      "description": "circleci-samples",
+      "label": "CircleCI",
+      "url": "https://circleci.com/workflow-run/f3ac82bf-4db4-468f-b019-44757256c115",
+      "state": "failed", 
+      "lastUpdated": "2019-03-25T23:27:25+00:00",
+      "issueKeys": [
+        "CC-19"
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "pipelineId": "circleci-samples",
+      "buildNumber": 13,
+      "updateSequenceNumber": 0,
+      "displayName": "Build #3",
+      "description": "circleci-samples",
+      "label": "CircleCI",
+      "url": "https://circleci.com/workflow-run/f3ac82bf-4db4-468f-b019-44757256c115",
+      "state": "successful", 
+      "lastUpdated": "2019-03-26T23:27:25+00:00",
+      "issueKeys": [
+        "CC-19"
       ]
     }
   ]
-
 }

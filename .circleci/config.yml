@@ -2,13 +2,16 @@ version: 2.1
 workflows:
   build-deploy:
     jobs:
-      - test-locally
-
-orbs:
-  dark: eddiewebb/burps@dev:eddie
+      - dev-version
+      - publish:
+          requires:
+            - dev-version
+          filters:
+            branches:
+              only: master
 
 jobs:
-  test-locally:
+  dev-version:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
@@ -16,15 +19,29 @@ jobs:
       - checkout
       - install-circleci
       - run:
-          name: Pack and Validate
+          name: Pack, Validate, and Publish
           command: |
             circleci config pack src/ > packed.yml
             circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+            circleci orb publish packed.yml circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}
       - install-bats
       - run:
-          name: Import Tests using BATS
+          name: Test against published dev version using BATS
           command: |
+            export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
             bats tests
+  publish:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - install-circleci
+      - run:
+          name: Promote to prod
+          command: |
+            circleci orb publish promote circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} patch --token ${CIRCLECI_API_KEY}
+
 
 commands:
   install-bats:
