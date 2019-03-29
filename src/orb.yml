@@ -131,7 +131,7 @@ commands:
               --arg branchName "${CIRCLE_BRANCH}" \
               --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
               --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-              --arg display "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME}"  \
+              --arg display "${CIRCLE_PROJECT_REPONAME}"  \
               --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB}" \
               --argjson issueKeys "${ISSUE_KEYS}" \
               '
