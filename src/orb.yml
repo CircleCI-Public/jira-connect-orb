@@ -4,30 +4,6 @@ description: Reports job status back to Atlassian JIRA instance using Atlassian 
   Must install [Ap NAME] from Atlassian Marketplace, and provide the proper ENV VARs.
   SharedSecret must be exposed as ATLASSIAN_CONNECT_SECRET
 
-
-
-examples:
-  basic_workflow:
-    description: Notify Atlassian for each job.
-    usage:
-      version: 2.1
-      orbs: 
-        jira: circleci/jira@volatile
-
-      workflows:
-        build:
-          jobs:
-            - build:
-                post-steps:
-                  - jira/notify
-
-      jobs:
-        build:
-          docker:
-          - image: circleci/node:10
-          steps:
-            - run: echo "hello"
-
 commands:
   notify:
     parameters:
