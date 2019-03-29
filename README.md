@@ -11,7 +11,7 @@ This Orb uses the existing Atlassian Jira token that can be configured for Circl
 
 
 ### See Build Status on Issues
-`git commit -m"Working on CC-22"`
+`git commit -m"Working on CC-21"`
 
 
 ![Jira developer panel with CircleCI build info](/assets/new_issue_view.png)
@@ -33,7 +33,7 @@ Includes Deployments too!
 **Tickets ready for Prod?**
 `project = CC AND deploymentEnvironmentType ~ test AND deploymentEnvironmentType !~ production`
 
-![Jira developer panel with CircleCI build info](/assets/deployment_support.png)
+![Jira developer panel with CircleCI build info](/assets/search_deploy_status.png)
 
 
 
