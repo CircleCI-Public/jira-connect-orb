@@ -1,8 +1,8 @@
 version: 2.1
 
 description: This Orb reports the status of builds and deployments in CircleCI Projects to your Jira installation.
-Requires that [CircleCI for Jira](https://marketplace.atlassian.com/apps/1215946) be installed in the Jira instance.  
-Please see [CircleCI Jira integration docs](https://circleci.com/docs/2.0/jira-plugin/)
+  Requires that [CircleCI for Jira](https://marketplace.atlassian.com/apps/1215946) be installed in the Jira instance.  
+  Please see [CircleCI Jira integration docs](https://circleci.com/docs/2.0/jira-plugin/)
 commands:
   notify:
     parameters:
