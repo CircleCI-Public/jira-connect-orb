@@ -3,8 +3,9 @@
 Updates the status of JIRA tickets as related commits building in CircleCI pass/fail.
 
 
+
 ## Setup
-This Orb uses the existing Atlassian Jira token that can be configured for CircleCI Projects.
+This Orb uses the existing Atlassian Jira token that can be configured for CircleCI Projects and requires that [CircleCI for Jira](https://marketplace.atlassian.com/apps/1215946) be installed in the Jira instance.  Please see [CircleCI Jira integration docs](https://circleci.com/docs/2.0/jira-plugin/)
 
 
 ## Examples
