@@ -1,8 +1,14 @@
 version: 2.1
 
-description: This Orb reports the status of builds and deployments in CircleCI Projects to your Jira installation.
-  Requires that [CircleCI for Jira](https://marketplace.atlassian.com/apps/1215946) be installed in the Jira instance.  
+description: >
+  This Orb reports the status of builds and deployments in CircleCI Projects to your Jira installation.
+
+  Requires that [CircleCI for Jira](https://marketplace.atlassian.com/apps/1215946) be installed in the Jira instance.
+
   Please see [CircleCI Jira integration docs](https://circleci.com/docs/2.0/jira-plugin/)
+
+  Orb source code available here: https://github.com/CircleCI-Public/jira-connect-orb
+
 commands:
   notify:
     parameters:
@@ -37,7 +43,7 @@ commands:
             echo 'export JIRA_BUILD_STATUS="successful"' >> $BASH_ENV
           when: on_success
 
-      - run: 
+      - run:
           when: always
           name: Update status in Atlassian Jira
           command: |
@@ -121,7 +127,7 @@ commands:
                     "displayName": $display,
                     "description": $description,
                     "url": $workflowUrl,
-                    "state": $state, 
+                    "state": $state,
                     "lastUpdated": $lastUpdated,
                     "issueKeys": $issueKeys
                   }
@@ -168,7 +174,7 @@ commands:
                     "displayName": $deployDisplay,
                     "description": $description,
                     "url": $url,
-                    "state": $state, 
+                    "state": $state,
                     "lastUpdated": $lastUpdated,
                     "issueKeys": $issueKeys,
                     "environment":{
@@ -182,7 +188,7 @@ commands:
               ' > /tmp/jira-status.json
             }
 
-            
+
             post_to_jira () {
               echo "Associating build with $ISSUE_KEYS on ${base_url}"
               HTTP_STATUS=$(curl \
@@ -194,7 +200,7 @@ commands:
 
               cat /tmp/curl_response.txt
 
-              if [ "${HTTP_STATUS}" != "200" ];then 
+              if [ "${HTTP_STATUS}" != "200" ];then
                 echo "Error calling Jira, result: ${HTTP_STATUS}" >&2
                 exit 1
               else
@@ -203,7 +209,5 @@ commands:
             }
 
 
-            # kick off 
-            run 
-
-
+            # kick off
+            run
