@@ -5,4 +5,5 @@ jobs:
     - image: circleci/node:10
     steps:
       - run: echo "hello"
-      - jira/notify
+      - jira/notify:
+          state_path:  /tmp/jira.status
