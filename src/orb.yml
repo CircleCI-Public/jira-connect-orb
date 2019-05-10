@@ -30,17 +30,21 @@ commands:
         type: enum
         enum: ["production", "staging", "testing", "development", "unmapped"]
         default: "development"
+      state_path:
+        description: Relative or absolute path to a store build state for orb.
+        default: "./circleci-orb-jira.status"
+        type: string
     steps:
       - run:
           name: JIRA - Setting Failure Condition
           command: |
-            echo 'export JIRA_BUILD_STATUS="failed"' >> $BASH_ENV
+            echo 'JIRA_BUILD_STATUS="failed"' > <<parameters.state_path>>
           when: on_fail
 
       - run:
           name: JIRA - Setting Success Condition
           command: |
-            echo 'export JIRA_BUILD_STATUS="successful"' >> $BASH_ENV
+            echo 'JIRA_BUILD_STATUS="successful"' > <<parameters.state_path>>
           when: on_success
 
       - run:
@@ -137,6 +141,7 @@ commands:
             }
 
             generate_json_payload_deployment () {
+              echo "Update Jira with status: ${JIRA_BUILD_STATUS}"
               iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
               echo {} | jq \
               --arg time_str "$(date +%s)" \
@@ -210,4 +215,6 @@ commands:
 
 
             # kick off
+            source <<parameters.state_path>>
             run
+            rm -f <<parameters.state_path>>
