@@ -2,7 +2,7 @@ description: Notify jira on single job
 usage:
   version: 2.1
   orbs: 
-    jira: circleci/jira@volatile
+    jira: circleci/jira@x.y.z
 
   workflows:
     build:
