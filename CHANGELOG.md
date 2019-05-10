@@ -9,3 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.4] 
 ### Fixed
 - Alpine users likely saw 'missing state' errors (Issue #6)
+
+
+## [1.0.3]
+### Added
+- Orb will pull Issue Key from branch (Issue #5), Thanks to [Nick](https://github.com/nickmbailey)!
