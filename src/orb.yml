@@ -10,7 +10,7 @@ description: >
   Orb source code available here: https://github.com/CircleCI-Public/jira-connect-orb
   
 orbs:
-  circleci/jq@1.8.0
+  jq: circleci/jq@1.8.0
 
 commands:
   notify:
