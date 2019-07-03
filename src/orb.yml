@@ -84,7 +84,11 @@ commands:
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ] + [.all_commit_details[].branch | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
               if [ -z "$ISSUE_KEYS" ]; then
                 # No issue keys found.
-                echo "No issue keys found. Please first create an issue ticket from the Jira plugin. https://circleci.com/docs/2.0/jira-plugin/"
+                echo "No issue keys found. This commit message does not contain a match for a Jira Issue."
+                exit 1
+              fi
+              if ! grep -q "acceptedDeployments" /tmp/job_info.json | ! grep -q "acceptedBuilds" /tmp/job_info.json; then
+                echo "No Jira keys associated with: ${ISSUE_KEYS}."
                 exit 1
               fi
             }
