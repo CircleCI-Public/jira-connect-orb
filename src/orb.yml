@@ -84,11 +84,7 @@ commands:
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ] + [.all_commit_details[].branch | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
               if [ -z "$ISSUE_KEYS" ]; then
                 # No issue keys found.
-                echo "No issue keys found. This commit message does not contain a match for a Jira Issue."
-                exit 1
-              fi
-              if ! grep -q "acceptedDeployments" /tmp/job_info.json | ! grep -q "acceptedBuilds" /tmp/job_info.json; then
-                echo "No Jira keys associated with: ${ISSUE_KEYS}."
+                echo "No issue keys found. This build does not contain a match for a Jira Issue. Please add your issue ID to the commit message or within the branch name."
                 exit 1
               fi
             }
@@ -212,7 +208,7 @@ commands:
               echo "Associating build with $ISSUE_KEYS on ${base_url}"
               HTTP_STATUS=$(curl \
               -u "${<<parameters.token_name>>}:" \
-              -s -w "%{http_code}" -o /tmp/curl_response.txt \
+              -s -w "%{http_code}" -o  /tmp/curl_response.txt \
               -H "Content-Type: application/json" \
               -H "Accept: application/json" \
               -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
@@ -221,6 +217,11 @@ commands:
 
               if [ "${HTTP_STATUS}" != "200" ];then
                 echo "Error calling Jira, result: ${HTTP_STATUS}" >&2
+                exit 1
+              fi
+
+              if ! grep -q "acceptedDeployments" /tmp/curl_response.txt | ! grep -q "acceptedBuilds" /tmp/curl_response.txt; then
+                echo "No Jira keys associated with: ${ISSUE_KEYS}."
                 exit 1
               else
                 echo "Success!"
