@@ -208,7 +208,7 @@ commands:
               echo "Associating build with $ISSUE_KEYS on ${base_url}"
               HTTP_STATUS=$(curl \
               -u "${<<parameters.token_name>>}:" \
-              -s -w "%{http_code}" -o  /tmp/curl_response.txt \
+              -s -w "%{http_code}" -o /tmp/curl_response.txt \
               -H "Content-Type: application/json" \
               -H "Accept: application/json" \
               -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
