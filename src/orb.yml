@@ -205,7 +205,6 @@ commands:
 
 
             post_to_jira () {
-              echo "Associating build with $ISSUE_KEYS on ${base_url}"
               HTTP_STATUS=$(curl \
               -u "${<<parameters.token_name>>}:" \
               -s -w "%{http_code}" -o /tmp/curl_response.txt \
@@ -213,18 +212,19 @@ commands:
               -H "Accept: application/json" \
               -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
 
-              cat /tmp/curl_response.txt
-
+              echo "Results from Jira: "
               if [ "${HTTP_STATUS}" != "200" ];then
                 echo "Error calling Jira, result: ${HTTP_STATUS}" >&2
+                jq '.' /tmp/curl_response.txt
                 exit 1
               fi
 
-              if ! grep -q "acceptedDeployments" /tmp/curl_response.txt || ! grep -q "acceptedBuilds" /tmp/curl_response.txt; then
-                echo "No Jira keys associated with: ${ISSUE_KEYS}."
-                exit 1
-              else
+              if jq -e '.acceptedBuilds[0]' /tmp/curl_response.txt > /dev/null || jq -e '.acceptedDeployments[0]' /tmp/curl_response.txt > /dev/null; then
                 echo "Success!"
+              else
+                echo "No Jira keys associated with: ${ISSUE_KEYS}."
+                jq '.' /tmp/curl_response.txt
+                exit 1
               fi
             }
 

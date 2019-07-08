@@ -153,6 +153,7 @@ function setup {
   # and reports success
   assert_contains_text '"acceptedDeployments":[{'  # acc Deployments has one object
   assert_contains_text '"rejectedDeployments":[]'  #rejecte does not
+
 }
 
 
