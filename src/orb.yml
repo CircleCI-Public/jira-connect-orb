@@ -220,7 +220,7 @@ commands:
                 exit 1
               fi
 
-              if ( ! grep -q "acceptedDeployments" /tmp/curl_response.txt ) | ( ! grep -q "acceptedBuilds" /tmp/curl_response.txt ) ; then
+              if ! grep -q "acceptedDeployments" /tmp/curl_response.txt || ! grep -q "acceptedBuilds" /tmp/curl_response.txt; then
                 echo "No Jira keys associated with: ${ISSUE_KEYS}."
                 exit 1
               else
