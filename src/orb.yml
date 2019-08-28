@@ -82,6 +82,11 @@ commands:
               https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}
               # see https://jqplay.org/s/TNq7c5ctot
               ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ] + [.all_commit_details[].branch | scan("([A-Z]{2,30}-[0-9]+)")   | .[] ]')
+              if [ -z "$ISSUE_KEYS" ]; then
+                # No issue keys found.
+                echo "No issue keys found. This build does not contain a match for a Jira Issue. Please add your issue ID to the commit message or within the branch name."
+                exit 1
+              fi
             }
 
             check_workflow_status () {
@@ -200,7 +205,6 @@ commands:
 
 
             post_to_jira () {
-              echo "Associating build with $ISSUE_KEYS on ${base_url}"
               HTTP_STATUS=$(curl \
               -u "${<<parameters.token_name>>}:" \
               -s -w "%{http_code}" -o /tmp/curl_response.txt \
@@ -208,13 +212,19 @@ commands:
               -H "Accept: application/json" \
               -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
 
-              cat /tmp/curl_response.txt
-
+              echo "Results from Jira: "
               if [ "${HTTP_STATUS}" != "200" ];then
                 echo "Error calling Jira, result: ${HTTP_STATUS}" >&2
+                jq '.' /tmp/curl_response.txt
                 exit 1
-              else
+              fi
+
+              if jq -e '.acceptedBuilds[0]' /tmp/curl_response.txt > /dev/null || jq -e '.acceptedDeployments[0]' /tmp/curl_response.txt > /dev/null; then
                 echo "Success!"
+              else
+                echo "No Jira keys associated with: ${ISSUE_KEYS}."
+                jq '.' /tmp/curl_response.txt
+                exit 1
               fi
             }
 
