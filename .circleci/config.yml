@@ -23,13 +23,31 @@ jobs:
           command: |
             circleci config pack src/ > packed.yml
             circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
-            circleci orb publish packed.yml circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}
+            PUBLISH_MESSAGE=`circleci orb publish packed.yml circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}`
+            echo $PUBLISH_MESSAGE
+            ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb `\(.*\)` was published.*/\1/p')
+            echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
+            echo $ORB_VERSION
       - install-bats
       - run:
           name: Test against published dev version using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
             bats tests
+      - run:
+          name: Publish Dev version to PR
+          command: |
+            if [ "$CIRCLE_PR_NUMBER" != "" ];then
+              echo "PR_NUMBER is ${CIRCLE_PR_NUMBER}"
+            else
+              CIRCLE_PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | sed -n 's/.*\/pull\/\([0-9]*\)/\1/p')
+              if [ "$CIRCLE_PR_NUMBER" == "" ];then
+                echo "No pr found, do nothing"
+                exit 0
+              fi
+            fi
+            curl -X POST -u cpe-bot:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${CIRCLE_PR_NUMBER}/comments" -d "{\"body\":\"Dev version of orb available for testing - \`${ORB_VERSION}\`\"}"
+
   publish:
     docker:
       - image: circleci/node:10
@@ -40,8 +58,21 @@ jobs:
       - run:
           name: Promote to prod
           command: |
-            circleci orb publish promote circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} patch --token ${CIRCLECI_API_KEY}
-
+            PUBLISH_MESSAGE=`circleci orb publish promote circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} patch --token ${CIRCLECI_API_KEY}`
+            echo $PUBLISH_MESSAGE
+            ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb .* was promoted to `\(.*\)`.*/\1/p')
+            echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
+      - run:
+          name: Publish Prod version to PR
+          command: |
+            curl "https://circleci.com/api/v1.1/project/gh/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}?circle-token=${CIRCLECI_API_KEY}" > build_info.txt
+            PR_NUMBER=`jq -r '.subject' build_info.txt | sed -n 's/Merge pull request #\([0-9]*\) from.*/\1/p'`
+            echo "PR_NUMBER is ${PR_NUMBER}"
+            if [ "$PR_NUMBER" == "" ];then
+              echo "No pr found, do nothing"
+              exit 0
+            fi
+            curl -X POST -u cpe-bot:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"*Production* version of orb available for use - \`${ORB_VERSION}\`\"}"
 
 commands:
   install-bats:
