@@ -78,8 +78,9 @@ function assert_matches_file {
 }
 
 function assert_jq_match {
+	FILE=${3:-${JSON_PROJECT_CONFIG}}
 	MATCH=$2
-	RES=$(jq -r "$1" ${JSON_PROJECT_CONFIG})
+	RES=$(jq -r "$1" ${FILE})
 	if [[ "$RES" != "$MATCH" ]];then
 		echo "Expected match "'"'"$MATCH"'"'" was not found in "'"'"$RES"'"'
 		return 1
@@ -87,8 +88,9 @@ function assert_jq_match {
 }
 
 function assert_jq_contains {
+	FILE=${3:-${JSON_PROJECT_CONFIG}}
 	MATCH=$2
-	RES=$(jq -r "$1" ${JSON_PROJECT_CONFIG})
+	RES=$(jq -r "$1" ${FILE})
 	if [[ "$RES" != *"$MATCH"* ]];then
 		echo "Expected match "'"'"$MATCH"'"'" was not found in "'"'"$RES"'"'
 		return 1

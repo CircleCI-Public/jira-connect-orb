@@ -71,8 +71,7 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success
-  assert_contains_text '"acceptedBuilds":[{'  # acc builds has one object
-  assert_contains_text '"rejectedBuilds":[]'  #rejecte does not
+  assert_jq_match '.acceptedBuilds | length' 1 /tmp/curl_response.txt # acc Deployments has one object
 }
 
 
@@ -104,9 +103,9 @@ function setup {
   # then is passes
   [[ "$status" == "0" ]]
 
-  # and reports success
-  assert_contains_text '"acceptedBuilds":[{'  # acc Deployments has one object
-  assert_contains_text '"rejectedBuilds":[]'  #rejecte does not
+  # and reports success 
+  assert_jq_match '.acceptedBuilds | length' 1 /tmp/curl_response.txt 
+  assert_jq_match '.rejectedBuilds | length' 0 /tmp/curl_response.txt 
   assert_contains_text "workflow is FAILED"
 }
 
@@ -151,8 +150,8 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success
-  assert_contains_text '"acceptedDeployments":[{'  # acc Deployments has one object
-  assert_contains_text '"rejectedDeployments":[]'  #rejecte does not
+  assert_jq_match '.acceptedDeployments | length' 1 /tmp/curl_response.txt # acc Deployments has one object
+  assert_jq_match '.rejectedDeployments | length' 0 /tmp/curl_response.txt   #rejecte does not
 
 }
 
