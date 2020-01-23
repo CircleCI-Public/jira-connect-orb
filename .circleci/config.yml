@@ -115,3 +115,4 @@ commands:
             echo "Run circleci help"              
             circleci help
             echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > ~/.circleci/cli.yml
+
