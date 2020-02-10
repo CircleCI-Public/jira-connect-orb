@@ -46,7 +46,7 @@ jobs:
       - run:
           name: Test against published dev version using BATS
           command: |
-            export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
+            export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_SHA1}"
             bats tests
 
 workflows:
