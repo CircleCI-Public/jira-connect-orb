@@ -12,16 +12,16 @@ usage:
         - component-B
         - integration:
             requires:
-            - component-A
-            - component-B
+              - component-A
+              - component-B
         - deploy:
             name: Dev East
-            requires: 
-            - integration
+            requires:
+              - integration
             post-steps:
-            - jira/notify:
-                job_type: deployment
-                environment_type: development
+              - jira/notify:
+                  job_type: deployment
+                  environment_type: development
         - deploy:
             name: Test East
             requires:
@@ -33,12 +33,12 @@ usage:
         - hold:
             name: Verify
             requires:
-            - Test East
+              - Test East
             type: approval
         - deploy:
             name: Prod East
             requires:
-            - Verify
+              - Verify
             post-steps:
             - jira/notify:
                 job_type: deployment
