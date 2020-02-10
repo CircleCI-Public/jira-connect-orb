@@ -22,12 +22,12 @@ parameters:
     default: "./circleci-orb-jira.status"
     type: string
   issue_regexp:
-    description: Override the default project key regexp if your project keys follow a different format. 
+    description: Override the default project key regexp if your project keys follow a different format.
     default: "[A-Z]{2,30}-[0-9]+"
     type: string
 steps:
   - jq/install
-  
+
   - run:
       name: JIRA - Setting Failure Condition
       command: |

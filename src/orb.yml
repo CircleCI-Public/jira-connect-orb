@@ -8,6 +8,6 @@ description: >
   Please see [CircleCI Jira integration docs](https://circleci.com/docs/2.0/jira-plugin/)
 
   Orb source code available here: https://github.com/CircleCI-Public/jira-connect-orb
-  
+
 orbs:
   jq: circleci/jq@1.8.0
