@@ -3,7 +3,7 @@ version: 2.1
 # add your orb below, to be used in integration tests (note: a @dev:alpha
 # release must exist.);
 orbs:
-  aws-code-deploy: circleci/jira@dev:alpha
+  jira: circleci/jira@dev:alpha
   orb-tools: circleci/orb-tools@9.0
 
 # Pipeline parameters
