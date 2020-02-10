@@ -44,9 +44,6 @@ function setup {
 
 
 @test "Execution of Notify Script Works with env vars" {
-  # given a test instance with valid secret
-  export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
-  export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
 
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="64983647689364"
@@ -77,10 +74,6 @@ function setup {
 
 
 @test "Workflow Status of Fail will override passing job" {
-  # given a test instance with valid secret
-  export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
-  export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
-
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="29ac9db7-35d5-4c31-b486-96d47c8b794f"
   export CIRCLE_BUILD_NUM="358"
@@ -123,9 +116,6 @@ function setup {
 
 
 @test "Execution of Notify Script Works for Deployments" {
-  # given a test instance with valid secret
-  export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
-  export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
 
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="64983647689364"
