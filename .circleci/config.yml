@@ -5,7 +5,7 @@ version: 2.1
 orbs:
   jira: circleci/jira@dev:alpha
   orb-tools: circleci/orb-tools@9.0
-  circleci-cli: circleci/circleci-cli@0.1
+  circleci-cli: circleci/circleci-cli@0.1.7
 
 # Pipeline parameters
 parameters:
