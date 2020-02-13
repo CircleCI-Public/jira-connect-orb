@@ -27,7 +27,7 @@ jobs:
   #
   integration-test-1:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:2020.02
     steps:
       - checkout
       - circleci-cli/install
