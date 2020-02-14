@@ -107,6 +107,7 @@ workflows:
           orb-name: circleci/jira
           context: orb-publishing
           add-pr-comment: true
+          pr-number-sed-expression: 's/.*(#\([0-9]*\)).*/\1/p'
           bot-token-variable: GHI_TOKEN
           bot-user: cpe-bot
           fail-if-semver-not-indicated: true
