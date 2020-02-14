@@ -1,118 +1,119 @@
 version: 2.1
-workflows:
-  build-deploy:
-    jobs:
-      - dev-version
-      - publish:
-          requires:
-            - dev-version
-          filters:
-            branches:
-              only: master
+
+# add your orb below, to be used in integration tests (note: a @dev:alpha
+# release must exist.);
+orbs:
+  jira: circleci/jira@dev:alpha
+  orb-tools: circleci/orb-tools@9.0
+  circleci-cli: circleci/circleci-cli@0.1.7
+
+# Pipeline parameters
+parameters:
+  # These pipeline parameters are required by the "trigger-integration-tests-workflow"
+  # job, by default.
+  run-integration-tests:
+    type: boolean
+    default: false
+  dev-orb-version:
+    type: string
+    default: "dev:alpha"
 
 jobs:
-  dev-version:
+  # This job is an example of an integration testing job.
+  # This job should execute a command from your orb and verify
+  # the output is as expected, otherwise the job should fail.
+  #
+  # Rename this job and add more as needed.
+  #
+  integration-test-1:
     docker:
-      - image: circleci/node:10
-    working_directory: ~/repo
+      - image: cimg/base:2020.02
     steps:
       - checkout
-      - install-circleci
+      - circleci-cli/install
       - run:
-          name: Pack, Validate, and Publish
-          command: |
-            circleci config pack src/ > packed.yml
-            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
-            PUBLISH_MESSAGE=`circleci orb publish packed.yml circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}`
-            echo $PUBLISH_MESSAGE
-            ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb `\(.*\)` was published.*/\1/p')
-            echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
-            echo $ORB_VERSION
-      - install-bats
-      - run:
-          name: Test against published dev version using BATS
-          command: |
-            export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
-            bats tests
-      - run:
-          name: Publish Dev version to PR
-          command: |
-            if [ "$CIRCLE_PR_NUMBER" != "" ];then
-              echo "PR_NUMBER is ${CIRCLE_PR_NUMBER}"
-            else
-              CIRCLE_PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | sed -n 's/.*\/pull\/\([0-9]*\)/\1/p')
-              if [ "$CIRCLE_PR_NUMBER" == "" ];then
-                echo "No pr found, do nothing"
-                exit 0
-              fi
-            fi
-            curl -X POST -u cpe-bot:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${CIRCLE_PR_NUMBER}/comments" -d "{\"body\":\"Dev version of orb available for testing - \`${ORB_VERSION}\`\"}"
-
-  publish:
-    docker:
-      - image: circleci/node:10
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - install-circleci
-      - run:
-          name: Promote to prod
-          command: |
-            # this repo uses squash commits with PR in tparens i,e. "blah blah (#21)"
-            PR_NUMBER=`git log -1 --pretty=%B | sed -n 's/.*(#\([0-9]*\)).*/\1/p'`
-            echo "PR_NUMBER is ${PR_NUMBER}"
-            if [ "$PR_NUMBER" == "" ];then
-              echo "No pr found, do nothing"
-              exit 1
-            fi
-            SEMVER_INCREMENT=`git log -1 --pretty=%B | sed -En 's/.*\[semver:(major|minor|patch|skip)\].*/\1/p'`
-            if [ -z ${SEMVER_INCREMENT} ];then
-              echo "Merge commit did not indicate which SemVer increment to make. Please ammend commit with [semver:FOO] where FOO is major, minor, or patch"
-              exit 1
-            elif [ "$SEMVER_INCREMENT" == "skip" ];then
-              echo "SEMVER in commit indicated to skip orb release"
-              echo "export PR_MESSAGE=\"BotComment: Orb publish was skipped due to [semver:skip] in commit message.\""  >> $BASH_ENV
-              exit 0
-            else
-              PUBLISH_MESSAGE=`circleci orb publish promote circleci/jira@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} ${SEMVER_INCREMENT} --token ${CIRCLECI_API_KEY}`            
-              echo $PUBLISH_MESSAGE
-              ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb .* was promoted to `\(.*\)`.*/\1/p')
-              echo "export PR_MESSAGE=\"BotComment: *Production* version of orb available for use - \\\`${ORB_VERSION}\\\`\"" >> $BASH_ENV
-            fi
-      - run:
-          name: Publish Prod version to PR
-          command: |
-            PR_NUMBER=`git log -1 --pretty=%B | sed -n 's/.*(#\([0-9]*\)).*/\1/p'`
-            curl -X POST -u cpe-bot:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"${PR_MESSAGE}\"}"
-
-commands:
-  install-bats:
-    description: installs the BATS bash testing tool
-    steps:
-      - run:      
-          name: Install BATS (bash testing)
+          name: Install BATS and YQ
           command: |
             cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
             sudo ./install.sh /usr/local
-      - run:
-          name: Install YQ
-          command: |
+            echo
+            echo "BATS installed"
+            echo
             curl -L https://github.com/mikefarah/yq/releases/download/2.1.1/yq_linux_amd64 -o yq
             chmod a+x yq
             sudo mv yq /usr/local/bin/
-  install-circleci:
-    description: installs the new CIrcleCI CLI with orb support
-    steps:
-      - run: 
-          name: Install CircleCI CLI (the new one)
+            echo
+            echo "YQ installed"
+            echo
+      - run:
+          name: Test against published dev version using BATS
           command: |
-            #curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | sudo bash
-            curl -L https://github.com/CircleCI-Public/circleci-cli/releases/download/v0.1.3139/circleci-cli_0.1.3139_linux_amd64.tar.gz -o /tmp/cli.tar.gz
-            tar -xzf /tmp/cli.tar.gz -C /tmp
-            chmod a+x /tmp/circleci-cli_0.1.3139_linux_amd64/circleci
-            sudo mv /tmp/circleci-cli_0.1.3139_linux_amd64/circleci /usr/local/bin
-            circleci version
-            echo "Run circleci help"              
-            circleci help
-            echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > ~/.circleci/cli.yml
+            export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_SHA1:0:7}"
+            bats tests
 
+workflows:
+  # This `lint-pack_validate_publish-dev` workflow will run on any commit.
+  lint_pack-validate_publish-dev:
+    unless: << pipeline.parameters.run-integration-tests >>
+    jobs:
+      - orb-tools/lint
+      # pack your orb YAML files to a single orb.yml
+      # validate the orb.yml file to ensure it is well-formed
+      - orb-tools/pack:
+          requires:
+            - orb-tools/lint
+
+      # release dev version of orb, for testing & possible publishing.
+      # orb will be published as dev:alpha and dev:${CIRCLE_SHA1:0:7}.
+      # requires a CircleCI API token to be stored as CIRCLE_TOKEN (default)
+      # https://circleci.com/docs/2.0/managing-api-tokens
+      # store CIRCLE_TOKEN as a project env var or Contexts resource
+      # if using Contexts, add your context below
+      - orb-tools/publish-dev:
+          orb-name: circleci/jira
+          context: orb-publishing
+          requires:
+            - orb-tools/pack
+
+      # trigger an integration workflow to test the
+      # dev:${CIRCLE_SHA1:0:7} version of your orb
+      - orb-tools/trigger-integration-tests-workflow:
+          name: trigger-integration-dev
+          context: orb-publishing
+          requires:
+            - orb-tools/publish-dev
+
+  # This `integration-tests_prod-release` workflow will only run
+  # when the run-integration-tests pipeline parameter is set to true.
+  # It is meant to be triggered by the "trigger-integration-tests-workflow"
+  # job, and run tests on <your orb>@dev:${CIRCLE_SHA1:0:7}.
+  integration-tests_prod-release:
+    when: << pipeline.parameters.run-integration-tests >>
+    jobs:
+      # your integration test jobs go here: essentially, run all your orb's
+      # jobs and commands to ensure they behave as expected. or, run other
+      # integration tests of your choosing
+
+      # an example job
+      - integration-test-1
+
+      # publish a semver version of the orb. relies on
+      # the commit subject containing the text "[semver:patch|minor|major|skip]"
+      # as that will determine whether a patch, minor or major
+      # version will be published or if publishing should
+      # be skipped.
+      # e.g. [semver:patch] will cause a patch version to be published.
+      - orb-tools/dev-promote-prod-from-commit-subject:
+          orb-name: circleci/jira
+          context: orb-publishing
+          add-pr-comment: true
+          pr-number-sed-expression: 's/.*(#\([0-9]*\)).*/\1/p'
+          bot-token-variable: GHI_TOKEN
+          bot-user: cpe-bot
+          fail-if-semver-not-indicated: true
+          publish-version-tag: false
+          requires:
+            - integration-test-1
+          filters:
+            branches:
+              only: master
