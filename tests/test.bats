@@ -13,6 +13,7 @@ function setup {
 
   # the name used in example config files.
   INLINE_ORB_NAME="jira"
+
 }
 
 
@@ -64,8 +65,6 @@ function setup {
 
   # when out command is called
   jq -r '.jobs["build"].steps[4].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
-
-  cat ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
   
