@@ -21,10 +21,15 @@ parameters:
     description: Relative or absolute path to a store build state for orb.
     default: "./circleci-orb-jira.status"
     type: string
+  service_id:
+    description: Specify the JSD service ID for the project this notification targets.
+    type: string
+    default: ''
   issue_regexp:
     description: Override the default project key regexp if your project keys follow a different format.
     default: "[A-Z]{2,30}-[0-9]+"
     type: string
+  
 steps:
   - jq/install
 
@@ -53,12 +58,14 @@ steps:
 
         run () {
           parse_jira_key_array
-          if [ "x" != "x${ISSUE_KEYS}" ]; then
+          HAS_JSD_SERVICE_ID = << parameters.service_id >>
+          if [ "x" != "x${ISSUE_KEYS}" || -n "$HAS_JSD_SERVICE_ID" ]; then
             check_workflow_status
             generate_json_payload_<<parameters.job_type>>
             post_to_jira
           else
             echo "No Jira issue keys found in commit subjects or branch name, skipping."
+            echo "No service ID selected. Please add the service_id parameter for JSD deployments."
             exit 0
           fi
         }
@@ -180,7 +187,16 @@ steps:
                 "url": $url,
                 "state": $state,
                 "lastUpdated": $lastUpdated,
-                "issueKeys": $issueKeys,
+                "associations": [
+                  {
+                    "associationType": "issueIdOrKeys",
+                    "values": [$issueKeys]
+                  },
+                  {
+                    "associationType": "serviceIdOrKeys",
+                    "values": ["<< parameters.service_id >>"]
+                  }
+                ],
                 "environment":{
                   "id": $envId,
                   "displayName": $envName,
