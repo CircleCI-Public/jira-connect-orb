@@ -9,3 +9,4 @@ jobs:
           job_type: deployment
           environment: non-prod
           state_path:  /tmp/jira.status
+          service_id: testid

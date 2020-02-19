@@ -62,6 +62,7 @@ function setup {
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
   process_config_with tests/cases/simple.yml
 
+  cat  ${PROCESSED_PROJECT_CONFIG}
 
   # when out command is called
   jq -r '.jobs["build"].steps[4].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash

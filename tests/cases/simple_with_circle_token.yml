@@ -7,3 +7,4 @@ jobs:
       - run: echo "hello"
       - jira/notify:
           token_name: "MY_CIRCLE_TOKEN"
+          service_id: testid

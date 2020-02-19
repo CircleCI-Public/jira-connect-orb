@@ -7,3 +7,4 @@ jobs:
       - run: echo "hello"
       - jira/notify:
           state_path:  /tmp/jira.status
+          service_id: testid
