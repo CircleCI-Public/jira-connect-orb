@@ -17,7 +17,7 @@ function setup {
 }
 
 
-@test "Basic expansion works" {
+@test "1: Basic expansion works" {
   # given
   process_config_with tests/cases/simple.yml
 
@@ -29,7 +29,7 @@ function setup {
 
 }
 
-@test "Basic expansion includes API token when set" {
+@test "2: Basic expansion includes API token when set" {
   # given
   process_config_with tests/cases/simple_with_circle_token.yml
 
@@ -41,10 +41,7 @@ function setup {
   assert_jq_contains '.jobs["build"].steps[4].run.command' '${MY_CIRCLE_TOKEN}'
 }
 
-
-
-
-@test "Execution of Notify Script Works with env vars" {
+@test "3: Execution of Notify Script Works with env vars" {
   # given a test instance with valid secret
   export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
   export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
@@ -75,9 +72,7 @@ function setup {
   assert_jq_match '.acceptedBuilds | length' 1 /tmp/curl_response.txt # acc Deployments has one object
 }
 
-
-
-@test "Workflow Status of Fail will override passing job" {
+@test "4: Workflow Status of Fail will override passing job" {
   # given a test instance with valid secret
   export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
   export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
@@ -110,8 +105,7 @@ function setup {
   assert_contains_text "workflow is FAILED"
 }
 
-
-@test "Basic expansion for deployments" {
+@test "5: Basic expansion for deployments" {
   # given
   process_config_with tests/cases/deployment.yml
 
@@ -122,8 +116,7 @@ function setup {
   assert_jq_contains '.jobs["build"].steps[4].run.command' '-X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/deployment'
 }
 
-
-@test "Execution of Notify Script Works for Deployments" {
+@test "6: Execution of Notify Script Works for Deployments" {
   # given a test instance with valid secret
   export ATLASSIAN_CONNECT_SECRET="${ATLASSIAN_CONNECT_SECRET}"
   export JIRA_BASE_URL="https://eddiewebb.atlassian.net"
