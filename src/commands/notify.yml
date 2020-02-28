@@ -57,25 +57,21 @@ steps:
         fi
 
         run () {
-          verify_token
           parse_jira_key_array
-          HAS_JSD_SERVICE_ID = << parameters.service_id >>
-            // If you have either an issue key or a service ID
-          if [[ -n "${ISSUE_KEYS}" || -n "$HAS_JSD_SERVICE_ID" ]]; then
+          HAS_JSD_SERVICE_ID="<< parameters.service_id >>"
+            # If you have either an issue key or a service ID
+          if [[ -n "${ISSUE_KEYS}" || -n "${HAS_JSD_SERVICE_ID}" ]]; then
             check_workflow_status
             generate_json_payload_<<parameters.job_type>>
             post_to_jira
           else
-              // If no service is or issue key is found.
+              # If no service is or issue key is found.
             echo "No Jira issue keys found in commit subjects or branch name, skipping."
             echo "No service ID selected. Please add the service_id parameter for JSD deployments."
             exit 0
           fi
         }
 
-        verify_token () {
-          // make sure token is valid or exit 1
-        }
 
         parse_jira_key_array () {
           # must save as ISSUE_KEYS='["CC-4"]'
@@ -203,7 +199,7 @@ steps:
                     "values": $issueKeys
                   },
                   {
-                    "associationType": "serviceId",
+                    "associationType": "serviceIdOrKeys",
                     "values": ["<< parameters.service_id >>"]
                   }
                 ],
