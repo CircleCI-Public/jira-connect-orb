@@ -117,7 +117,8 @@ steps:
           echo {} | jq \
           --arg time_str "$(date +%s)" \
           --arg lastUpdated "${iso_time}" \
-          --arg pipeline "${CIRCLE_PROJECT_REPONAME}" \
+          --arg pipelineNumber "${CIRCLE_PIPELINE_NUMBER:-\<< pipeline.number >>}" \
+          --arg projectName "${CIRCLE_PROJECT_REPONAME}" \
           --arg state "${JIRA_BUILD_STATUS}" \
           --arg jobName "${CIRCLE_JOB}" \
           --arg buildNumber "${CIRCLE_BUILD_NUM}" \
@@ -138,9 +139,9 @@ steps:
             "builds": [
               {
                 "schemaVersion": "1.0",
-                "pipelineId": $pipeline,
-                "buildNumber": 1,
-                "updateSequenceNumber": $buildNumber,
+                "pipelineId": $projectName,
+                "buildNumber": $pipelineNumber,
+                "updateSequenceNumber": $time_str,
                 "displayName": $display,
                 "description": $description,
                 "url": $workflowUrl,
@@ -161,6 +162,8 @@ steps:
           --arg lastUpdated "${iso_time}" \
           --arg state "${JIRA_BUILD_STATUS}" \
           --arg buildNumber "${CIRCLE_BUILD_NUM}" \
+          --arg pipelineNumber "${CIRCLE_PIPELINE_NUMBER:-\<< pipeline.number >>}" \
+          --arg projectName "${CIRCLE_PROJECT_REPONAME}" \
           --arg url "${CIRCLE_BUILD_URL}" \
           --arg commit "${CIRCLE_SHA1}" \
           --arg refUri "${CIRCLE_REPOSITORY_URL}/tree/${CIRCLE_BRANCH}" \
@@ -187,8 +190,8 @@ steps:
                   "displayName": $pipelineDisplay,
                   "url": $workflowUrl
                 },
-                "deploymentSequenceNumber": $buildNumber,
-                "updateSequenceNumber": 1,
+                "deploymentSequenceNumber": $pipelineNumber,
+                "updateSequenceNumber": $time_str,
                 "displayName": $deployDisplay,
                 "description": $description,
                 "url": $url,
@@ -196,11 +199,11 @@ steps:
                 "lastUpdated": $lastUpdated,
                 "associations": [
                   {
-                    "associationType": "issueIdOrKeys",
-                    "values": [$issueKeys]
+                    "associationType": "issueKeys",
+                    "values": $issueKeys
                   },
                   {
-                    "associationType": "serviceIdOrKeys",
+                    "associationType": "serviceId",
                     "values": ["<< parameters.service_id >>"]
                   }
                 ],
