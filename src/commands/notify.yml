@@ -112,7 +112,7 @@ steps:
           export WORKFLOW_STATUS=$(jq -r '.status' /tmp/workflow.json)
           export CIRCLE_PIPELINE_NUMBER=$(jq -r '.pipeline_number' /tmp/workflow.json)
           echo "This job is passing, however another job in workflow is ${WORKFLOW_STATUS}"
-          
+
           if [ "<<parameters.job_type>>" != "deployment" ]; then
               # deployments are special, cause they pass or fail alone.
               # but jobs are stuck togehter, and they must respect status of workflow
