@@ -182,9 +182,9 @@ steps:
           --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
           --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
           --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-          --arg pipelineDisplay "#${CIRCLE_BUILD_NUM} ${CIRCLE_PROJECT_REPONAME}"  \
-          --arg deployDisplay "#${CIRCLE_BUILD_NUM}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
-          --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM} ${CIRCLE_JOB} <<parameters.environment>>" \
+          --arg pipelineDisplay "#${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_PROJECT_REPONAME}"  \
+          --arg deployDisplay "#${CIRCLE_PIPELINE_NUMBER}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
+          --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_JOB} <<parameters.environment>>" \
           --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
           --arg envName "<<parameters.environment>>" \
           --arg envType "<<parameters.environment_type>>" \
