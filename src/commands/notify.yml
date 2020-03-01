@@ -162,6 +162,13 @@ steps:
           # given workflow and job =number we get uuid, and then iterate workflow to find any jobs stating us as dependency.
           echo "Checking where job with ID: ${MY_ID} fits in larger workflow."
           DEP_JOBS=$(jq -r --argjson jobid ${MY_ID} '.items[] | select(.dependencies[] | contains($jobid)) | .id' /tmp/workflow_jobs.json)
+          BLOCKED_JOBS=$(jq -r '.items[] | select(.status == "blocked").id' /tmp/workflow_jobs.json)
+
+          if [ "x${BLOCKED_JOBS}" != "x" ];then
+            # there are jobs in the workflow yet to run, override status
+            echo "Downstream jobs found, overriding job status to workflow in_progress"
+            OUTCOME_STATUS="in_progress"
+          fi
 
           for job in ${DEP_JOBS};do
             TYPE=$(jq -r --arg jobid "${job}" '.items[] | select(.id == $jobid) | .type' /tmp/workflow_jobs.json)
@@ -172,9 +179,6 @@ steps:
               # waiting on manual apporval, indicate that
               OUTCOME_STATUS="pending"
               break
-            else
-              echo "Ready to build, keep checking."
-              OUTCOME_STATUS="in_progress"
             fi
           done
           export JIRA_BUILD_STATUS=$OUTCOME_STATUS
