@@ -109,7 +109,7 @@ function setup {
   assert_jq_match '.jobs | length' 1 #only 1 job
   assert_jq_match '.jobs["build"].steps[0].run.command' 'echo "hello"'
   assert_jq_match '.jobs["build"].steps[4].run.name' 'Update status in Atlassian Jira'
-  assert_jq_contains '.jobs["build"].steps[4].run.command' '-X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/deployment'
+  assert_jq_contains '.jobs["build"].steps[4].run.command' 'TYPE=${1:-deployment}'
 }
 
 @test "6: Execution of Notify Script Works for Deployments" {
@@ -265,5 +265,39 @@ function setup {
   assert_jq_match '.builds | length' 1 /tmp/jira-status.json
   assert_jq_match '.builds[0].buildNumber' 324 /tmp/jira-status.json
   assert_jq_match '.builds[0].state' 'pending' /tmp/jira-status.json
+}
+
+
+
+
+@test "10: Deployments post success on build then deploy" {
+ 
+  # and the infomprovied by a CCI container
+  export CIRCLE_WORKFLOW_ID="8753575d-5a3d-48de-bba7-3327efa63fa8"
+  export CIRCLE_BUILD_NUM="803"
+  export CIRCLE_JOB="passing"
+  export CIRCLE_PROJECT_USERNAME="eddiewebb"
+  export CIRCLE_SHA1="aef3425"
+  export CIRCLE_PROJECT_REPONAME="circleci-samples"
+  export CIRCLE_REPOSITORY_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
+  export CIRCLE_BRANCH="master"
+  echo 'export JIRA_BUILD_STATUS="failed"' >> /tmp/jira.status
+  process_config_with tests/cases/deployment.yml
+
+
+  # when out command is called
+  jq -r '.jobs["build"].steps[4].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  
+  # then is passes
+  [[ "$status" == "0" ]]
+
+  assert_contains_text "This job is a deployment, the orb will notify Jira that any pedning build was successful"
+  assert_contains_text '"buildNumber": 326' #only payload for builds returns this
+  assert_contains_text '"deploymentSequenceNumber": 326' #only payload for deployment contains this.
+
+
 }
 

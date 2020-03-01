@@ -67,10 +67,17 @@ steps:
         run () {
           verify_api_key
           parse_jira_key_array
+          load_workflow_state
           HAS_JSD_SERVICE_ID="<< parameters.service_id >>"
             # If you have either an issue key or a service ID
           if [[ -n "${ISSUE_KEYS}" || -n "${HAS_JSD_SERVICE_ID}" ]]; then
-            check_workflow_status
+            if [[ "<<parameters.job_type>>" == "deployment" ]];then
+              #deployments always send pipeline build success.
+              echo "This job is a deployment, the orb will notify Jira that any pedning build was successful"
+              export JIRA_BUILD_STATUS="successful"
+              generate_json_payload_build
+              post_to_jira "build"
+            fi
             generate_json_payload_<<parameters.job_type>>
             post_to_jira
           else
@@ -114,7 +121,7 @@ steps:
           fi
         }
 
-        check_workflow_status () {
+        load_workflow_state () {
           source <<parameters.state_path>>
           URL="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}"
           fetch $URL /tmp/workflow.json
@@ -128,9 +135,8 @@ steps:
             return
           fi
 
-
           # deployments are special, cause they pass or fail alone.
-          if [ "build" != "deployment" ]; then
+          if [ "deployment" != "<<parameters.job_type>>" ]; then
               # All normal jobs must respect status of workflow. These are the possible "active" oens
               case $WORKFLOW_STATUS in
                 "fail"*)
@@ -246,8 +252,8 @@ steps:
           --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
           --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
           --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-          --arg pipelineDisplay "#${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_PROJECT_REPONAME}"  \
-          --arg deployDisplay "#${CIRCLE_PIPELINE_NUMBER}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
+          --arg pipelineDisplay "${CIRCLE_PROJECT_REPONAME}"  \
+          --arg deployDisplay "#${CIRCLE_PIPELINE_NUMBER} - ${CIRCLE_JOB}"  \
           --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_JOB} <<parameters.environment>>" \
           --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
           --arg envName "<<parameters.environment>>" \
@@ -294,12 +300,13 @@ steps:
 
 
         post_to_jira () {
+          TYPE=${1:-<<parameters.job_type>>}
           HTTP_STATUS=$(curl \
           -u "${<<parameters.token_name>>}:" \
           -s -w "%{http_code}" -o /tmp/curl_response.txt \
           -H "Content-Type: application/json" \
           -H "Accept: application/json" \
-          -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
+          -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/${TYPE}" --data @/tmp/jira-status.json)
 
           echo "Results from Jira: "
           if [ "${HTTP_STATUS}" != "200" ];then
