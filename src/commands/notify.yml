@@ -19,7 +19,7 @@ parameters:
     default: "development"
   state_path:
     description: Relative or absolute path to a store build state for orb.
-    default: "./circleci-orb-jira.status"
+    default: "/tmp/circleci-orb-jira.status"
     type: string
   service_id:
     description: Specify the JSD service ID for the project this notification targets.
@@ -115,7 +115,7 @@ steps:
         }
 
         check_workflow_status () {
-          source /tmp/jira.status
+          source <<parameters.state_path>>
           URL="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}"
           fetch $URL /tmp/workflow.json
           export WORKFLOW_STATUS=$(jq -r '.status' /tmp/workflow.json)
@@ -154,7 +154,7 @@ steps:
 
         # return 'pending' if any dependet job is approval, else 'in_progress'
         get_dependent_job_status () {
-          source /tmp/jira.status
+          source <<parameters.state_path>>
           OUTCOME_STATUS=${JIRA_BUILD_STATUS}
           URL="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
           fetch $URL /tmp/workflow_jobs.json
