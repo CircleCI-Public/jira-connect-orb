@@ -1,0 +1,11 @@
+jobs:
+  build:
+    jobs:
+    docker:
+    - image: circleci/node:10
+    steps:
+      - run: echo "hello"
+      - jira/notify:
+          state_path:  /tmp/jira.status
+          service_id: testid
+          override_status: cancelled

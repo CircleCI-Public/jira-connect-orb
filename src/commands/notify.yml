@@ -29,6 +29,14 @@ parameters:
     description: Override the default project key regexp if your project keys follow a different format.
     default: "[A-Z]{2,30}-[0-9]+"
     type: string
+  override_status:
+    description: |
+      Use this to send a fixed status when deeper insight than success/fail is desired.
+      Examples: 1) Use at the start of LONG jobs to send a "in_progress" status to Jira.
+      2) Use as the final step before an approval job to send a "pending"
+    default: "actual"
+    enum: ["pending", "in_progress", "successful", "failed", "cancelled", "unknown", "actual"]
+    type:  enum
 
 steps:
   - jq/install
@@ -66,7 +74,7 @@ steps:
             generate_json_payload_<<parameters.job_type>>
             post_to_jira
           else
-              # If no service is or issue key is found.
+            # If no service is or issue key is found.
             echo "No Jira issue keys found in commit subjects or branch name, skipping."
             echo "No service ID selected. Please add the service_id parameter for JSD deployments."
             exit 0
@@ -107,20 +115,72 @@ steps:
         }
 
         check_workflow_status () {
+          source /tmp/jira.status
           URL="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}"
           fetch $URL /tmp/workflow.json
           export WORKFLOW_STATUS=$(jq -r '.status' /tmp/workflow.json)
           export CIRCLE_PIPELINE_NUMBER=$(jq -r '.pipeline_number' /tmp/workflow.json)
-          echo "This job is passing, however another job in workflow is ${WORKFLOW_STATUS}"
+          echo "This job is ${JIRA_BUILD_STATUS}, however another job in workflow is ${WORKFLOW_STATUS}"
 
-          if [ "<<parameters.job_type>>" != "deployment" ]; then
-              # deployments are special, cause they pass or fail alone.
-              # but jobs are stuck togehter, and they must respect status of workflow
-              if [[ "$WORKFLOW_STATUS" == "fail"* ]]; then
-                export JIRA_BUILD_STATUS="failed"
-              fi
+          if [ "actual" != "<<parameters.override_status>>" ];then
+            echo "Override parameter present on orb. Setting status to: <<parameters.override_status>>"
+            export JIRA_BUILD_STATUS="<<parameters.override_status>>"
+            return
           fi
+
+
+          # deployments are special, cause they pass or fail alone.
+          if [ "build" != "deployment" ]; then
+              # All normal jobs must respect status of workflow. These are the possible "active" oens
+              case $WORKFLOW_STATUS in
+                "fail"*)
+                  export JIRA_BUILD_STATUS="failed"
+                  ;;
+                "error")
+                  export JIRA_BUILD_STATUS="failed"
+                  ;;
+                "cancel"*)
+                  #workflow is waiting on manual approval
+                  export JIRA_BUILD_STATUS="cancelled"
+                  ;;
+                *)
+                  #workflow is not over, but this may r may not be final job
+                  get_dependent_job_status
+                  ;;
+              esac
+          fi
+          echo "Status set to ${JIRA_BUILD_STATUS}"
         }
+
+        # return 'pending' if any dependet job is approval, else 'in_progress'
+        get_dependent_job_status () {
+          source /tmp/jira.status
+          OUTCOME_STATUS=${JIRA_BUILD_STATUS}
+          URL="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
+          fetch $URL /tmp/workflow_jobs.json
+          MY_ID=$(jq --argjson jobnum ${CIRCLE_BUILD_NUM} '.items[] | select(.job_number == $jobnum) | .id' /tmp/workflow_jobs.json)
+          # given workflow and job =number we get uuid, and then iterate workflow to find any jobs stating us as dependency.
+          echo "Checking where job with ID: ${MY_ID} fits in larger workflow."
+          DEP_JOBS=$(jq -r --argjson jobid ${MY_ID} '.items[] | select(.dependencies[] | contains($jobid)) | .id' /tmp/workflow_jobs.json)
+
+          for job in ${DEP_JOBS};do
+            TYPE=$(jq -r --arg jobid "${job}" '.items[] | select(.id == $jobid) | .type' /tmp/workflow_jobs.json)
+            STATUS=$(jq --arg jobid "${job}" '.items[] | select(.id == $jobid) | .status' /tmp/workflow_jobs.json)
+            echo "Job ${job} of type ${TYPE} depends on current, shows status: ${STATUS}"
+            if [ "$TYPE" == "approval" ];then
+              echo "Downstream job is approval, mark workflow pending."
+              # waiting on manual apporval, indicate that
+              OUTCOME_STATUS="pending"
+              break
+            else
+              echo "Ready to build, keep checking."
+              OUTCOME_STATUS="in_progress"
+            fi
+          done
+          export JIRA_BUILD_STATUS=$OUTCOME_STATUS
+        }
+
+
 
         generate_json_payload_build () {
           iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')

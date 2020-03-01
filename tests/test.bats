@@ -202,3 +202,68 @@ function setup {
   assert_jq_match '.deployments[0].pipeline.id' "${CIRCLE_PROJECT_REPONAME}" /tmp/jira-status.json
 }
 
+
+
+@test "8: Override status is used." {
+  
+  export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
+  export CIRCLE_BUILD_NUM="768"
+  export CIRCLE_JOB="passing"
+  export CIRCLE_PROJECT_USERNAME="eddiewebb"
+  export CIRCLE_SHA1="aef3425"
+  export CIRCLE_PROJECT_REPONAME="circleci-samples"
+  export CIRCLE_REPOSITORY_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
+  export CIRCLE_BRANCH="master"
+  echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
+  process_config_with tests/cases/override.yml
+
+  # when out command is called
+  jq -r '.jobs["build"].steps[4].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  
+  # then is passes
+  [[ "$status" == "0" ]]
+
+
+  assert_contains_text "Override parameter present on orb. Setting status to: cancelled" 
+
+  # and reports success 
+  assert_jq_match '.builds | length' 1 /tmp/jira-status.json
+  assert_jq_match '.builds[0].state' 'cancelled' /tmp/jira-status.json
+  assert_jq_match '.builds[0].pipelineId' "${CIRCLE_PROJECT_REPONAME}" /tmp/jira-status.json
+
+}
+
+@test "9: Intermediate jobs send intermediate statuses" {
+  # given a workflow with "blocked" jobs held by approval.
+  export CIRCLE_WORKFLOW_ID="bb60b150-b61d-47e2-b6f9-3be0c30f17da"
+  # and a job early in that workflow
+  export CIRCLE_BUILD_NUM="798"
+  # that is passing
+  export CIRCLE_JOB="passing"
+  export CIRCLE_PROJECT_USERNAME="eddiewebb"
+  export CIRCLE_SHA1="aef3425"
+  export CIRCLE_PROJECT_REPONAME="circleci-samples"
+  export CIRCLE_REPOSITORY_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
+  export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
+  export CIRCLE_BRANCH="master"
+  echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
+
+  # when processed
+  process_config_with tests/cases/simple.yml
+  jq -r '.jobs["build"].steps[4].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  
+  # then is passes
+  [[ "$status" == "0" ]]
+
+
+  # Then PENDING statuses are sent instead of success
+  assert_jq_match '.builds | length' 1 /tmp/jira-status.json
+  assert_jq_match '.builds[0].buildNumber' 324 /tmp/jira-status.json
+  assert_jq_match '.builds[0].state' 'pending' /tmp/jira-status.json
+}
+
