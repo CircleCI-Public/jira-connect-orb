@@ -135,25 +135,36 @@ steps:
             return
           fi
 
+
+          if [ "$JIRA_BUILD_STATUS" == "failed" ];then
+            # no need to waste time figruging out where we are, it rboke.
+            export JIRA_BUILD_STATUS="failed"
+            break
+          fi
+
           # deployments are special, cause they pass or fail alone.
-          if [ "deployment" != "<<parameters.job_type>>" ]; then
-              # All normal jobs must respect status of workflow. These are the possible "active" oens
-              case $WORKFLOW_STATUS in
-                "fail"*)
-                  export JIRA_BUILD_STATUS="failed"
-                  ;;
-                "error")
-                  export JIRA_BUILD_STATUS="failed"
-                  ;;
-                "cancel"*)
-                  #workflow is waiting on manual approval
-                  export JIRA_BUILD_STATUS="cancelled"
-                  ;;
-                *)
-                  #workflow is not over, but this may r may not be final job
-                  get_dependent_job_status
-                  ;;
-              esac
+          if [ "deployment" == "<<parameters.job_type>>" ]; then
+            export JIRA_BUILD_STATUS=${JIRA_BUILD_STATUS}
+            break
+          fi
+
+          # All normal jobs must respect status of workflow. These are the possible "active" oens
+          case $WORKFLOW_STATUS in
+            "fail"*)
+              export JIRA_BUILD_STATUS="failed"
+              ;;
+            "error")
+              export JIRA_BUILD_STATUS="failed"
+              ;;
+            "cancel"*)
+              #workflow is waiting on manual approval
+              export JIRA_BUILD_STATUS="cancelled"
+              ;;
+            *)
+              #workflow is not over, but this may r may not be final job
+              get_dependent_job_status
+              ;;
+          esac
           fi
           echo "Status set to ${JIRA_BUILD_STATUS}"
         }
