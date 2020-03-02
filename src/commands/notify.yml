@@ -38,6 +38,7 @@ parameters:
     enum: ["pending", "in_progress", "successful", "failed", "cancelled", "unknown", "actual"]
     type:  enum
 
+
 steps:
   - jq/install
 
@@ -97,7 +98,7 @@ steps:
         fetch () {
           URL="$1"
           OFILE="$2"
-          RESP=$(curl -w "%{http_code}" -s <<# parameters.token_name >> --user "${<<parameters.token_name>>}:" <</parameters.token_name>> \
+          RESP=$(curl -L -w "%{http_code}" -s <<# parameters.token_name >> --user "${<<parameters.token_name>>}:" <</parameters.token_name>> \
           -o "${OFILE}" \
           "${URL}")
 
@@ -129,9 +130,9 @@ steps:
           export CIRCLE_PIPELINE_NUMBER=$(jq -r '.pipeline_number' /tmp/workflow.json)
           echo "This job is ${JIRA_BUILD_STATUS}, however another job in workflow is ${WORKFLOW_STATUS}"
 
-          if [ "actual" != "<<parameters.override_status>>" ];then
-            echo "Override parameter present on orb. Setting status to: <<parameters.override_status>>"
-            export JIRA_BUILD_STATUS="<<parameters.override_status>>"
+          if [ "actual" != "${INTERNAL_STATUS_OVERRIDE:-<<parameters.override_status>>}" ];then
+            echo "Override parameter present on orb. Setting status to: ${INTERNAL_STATUS_OVERRIDE:-<<parameters.override_status>>}"
+            export JIRA_BUILD_STATUS="${INTERNAL_STATUS_OVERRIDE:-<<parameters.override_status>>}"
             return
           fi
 
@@ -192,9 +193,29 @@ steps:
             STATUS=$(jq --arg jobid "${job}" '.items[] | select(.id == $jobid) | .status' /tmp/workflow_jobs.json)
             echo "Job ${job} of type ${TYPE} depends on current, shows status: ${STATUS}"
             if [ "$TYPE" == "approval" ];then
-              echo "Downstream job is approval, mark workflow pending."
               # waiting on manual apporval, indicate that
               OUTCOME_STATUS="pending"
+              echo "Downstream job is approval, checking for deployments on the other side"
+              My_DEP_JOBS=$(jq -r --argjson jobid ${job} '.items[] | select(.dependencies[] | contains($jobid)) | .name' /tmp/workflow_jobs.json)
+              fetch https://github.com/gsf/yaml2json/releases/download/1.0/yaml2json-linux-amd64 yaml2json
+              chmod a+x yaml2json
+              jq -r '.Dispatched.ConfigYml' /.circleci-runner-config.json > /tmp/config.yml
+              ./yaml2json /tmp/config.yml > /tmp/config.json
+              for dep_job_name in ${My_DEP_JOBS}; do
+              
+                IS_DEPLOY=$(jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira") | .run.command | contains("deployment\" == \"deployment")' /tmp/config.json)
+                if [ "$IS_DEPLOY" == "true" ];then
+                  echo "Next job is deploy, mark pipeline successful, deploy pending"
+                  OUTCOME_STATUS="successful"
+                  # things get meta here.  We dump the orbified config's command to a bash file and run it, first setting env  `INTERNAL_STATUS_OVERRIDE`
+                  # That valye ebing present will circumvent status logic but respect env type, name, etc from the deployment step.
+                  jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira")' | .run.command > /tmp/future_step.bash
+                  $(INTERNAL_STATUS_OVERRIDE="pending" bash /tmp/future_step.bash) || echo "Future deployment pending status failed, resuming pipeline status."
+                  break
+                else
+                  echo "Next job does not appear to be a deployment, continue looking for deployments or send pending on workflow."
+                fi  
+              done
               break
             fi
           done
