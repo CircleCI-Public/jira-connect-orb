@@ -165,7 +165,7 @@ steps:
               get_dependent_job_status
               ;;
           esac
-          fi
+          
           echo "Status set to ${JIRA_BUILD_STATUS}"
         }
 
