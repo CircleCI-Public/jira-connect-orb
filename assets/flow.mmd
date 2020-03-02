@@ -1,0 +1,25 @@
+
+# you can render or edit at 
+# https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiZ3JhcGggVERcbiAgQVtOb3RpZnldIC0tPnxHZXQgaXNzdWUga2V5c3wgQntpc3N1ZSBpbiBicmFuY2ggb3IgY29tbWl0c31cbiAgQiAtLT58WWVzfCBCMihHZXQgV29ya2Zsb3cgSW5mbylcbiAgQiAtLT4gfE5vfCBOKFNlbmQgTm90aGluZylcbiAgTi0tPkZpbihFbmQpXG4gIEIyIC0tPiBDe0RlcGxveW1lbnR9XG4gIEMgLS0-fERlcGxveW1lbnR8QzIoTWFyayBQaXBlbGluZSBTdWNjZXNzKVxuICBDMi0tPkMzKFNlbmQgRGVwbG95IHN0YXR1cyBieSBqb2Igb3V0Y29tZSlcbiAgQyAtLT58QnVpbGR8IFcoR2V0IFdvcmtmbG93IFN0YXR1cylcbiAgVyAtLT4gVzF7aXMgd29ya2Zsb3cgZmFpbGVkfVxuICBXMS0tPnxZZXN8IEYoU2VuZCBGYWlsZWQpXG4gIEYtLT5GaW5cbiAgVzEtLT58Tm98IEJMe2FueSBqb2JzIGJsb2NrZWR9XG4gIEJMLS0-fE5vfCBKKFNlbmQgSm9iKVxuICBKLS0-RmluXG4gIEJMLS0-fFllc3wgSHtpcyBkZXBlbmRlbnQgam9iIGhvbGR9XG4gIEgtLT58WWVzfCBQKFNlbmQgUGVuZGluZylcbiAgSC0tPnxOb3wgSShTZW5kIEluUHJvZ3Jlc3MpXG4gIEktLT5GaW5cbiAgUC0tPkZpblxuXHRcdCIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9
+
+graph TD
+  A[Notify] -->|Get issue keys| B{issue in branch or commits}
+  B -->|Yes| B2(Get Workflow Info)
+  B --> |No| N(Send Nothing)
+  N-->Fin(End)
+  B2 --> C{Deployment}
+  C -->|Deployment|C2(Mark Pipeline Success)
+  C2-->C3(Send Deploy status by job outcome)
+  C -->|Build| W(Get Workflow Status)
+  W --> W1{is workflow failed}
+  W1-->|Yes| F(Send Failed)
+  F-->Fin
+  W1-->|No| BL{any jobs blocked}
+  BL-->|No| J(Send Job)
+  J-->Fin
+  BL-->|Yes| H{is dependent job hold}
+  H-->|Yes| P(Send Pending)
+  H-->|No| I(Send InProgress)
+  I-->Fin
+  P-->Fin
+		

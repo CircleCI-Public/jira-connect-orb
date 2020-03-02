@@ -27,3 +27,11 @@ Includes Deployments too!
 `project = CC AND deploymentEnvironmentType ~ test AND deploymentEnvironmentType !~ production`
 
 ![Jira developer panel with CircleCI build info](/assets/search_deploy_status.png)
+
+
+## Development
+
+### Workflow
+
+To understand how we translate a collection of random jobs into sense, see below.
+[![](/assets/flow.png)
