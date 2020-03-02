@@ -152,7 +152,7 @@ steps:
           # deployments are special, cause they pass or fail alone.
           if [ "deployment" == "<<parameters.job_type>>" ]; then
             export JIRA_BUILD_STATUS=${JIRA_BUILD_STATUS}
-            break
+            return
           fi
 
           # All normal jobs must respect status of workflow. These are the possible "active" oens
