@@ -166,7 +166,7 @@ steps:
               get_dependent_job_status
               ;;
           esac
-          
+
           echo "Status set to ${JIRA_BUILD_STATUS}"
         }
 
@@ -202,7 +202,7 @@ steps:
               jq -r '.Dispatched.ConfigYml' /.circleci-runner-config.json > /tmp/config.yml
               ./yaml2json /tmp/config.yml > /tmp/config.json
               for dep_job_name in ${My_DEP_JOBS}; do
-              
+
                 IS_DEPLOY=$(jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira") | .run.command | contains("deployment\" == \"deployment")' /tmp/config.json)
                 if [ "$IS_DEPLOY" == "true" ];then
                   echo "Next job is deploy, mark pipeline successful, deploy pending"
@@ -214,7 +214,7 @@ steps:
                   break
                 else
                   echo "Next job does not appear to be a deployment, continue looking for deployments or send pending on workflow."
-                fi  
+                fi
               done
               break
             fi
