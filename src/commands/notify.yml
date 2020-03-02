@@ -37,6 +37,11 @@ parameters:
     default: "actual"
     enum: ["pending", "in_progress", "successful", "failed", "cancelled", "unknown", "actual"]
     type:  enum
+  debug:
+    description: |
+      Verbose logging and debug artifacts
+    type:  boolean
+    default: false
 
 
 steps:
@@ -58,7 +63,7 @@ steps:
       when: always
       name: Update status in Atlassian Jira
       command: |
-        : ${<<parameters.token_name>>:?"Please provide a CircleCI API token for this orb to work!"} >&2
+        : ${<< parameters.token_name >>:?"Please provide a CircleCI API token for this orb to work!"} >&2
         if [[ $(echo $CIRCLE_REPOSITORY_URL | grep github.com) ]]; then
           VCS_TYPE=github
         else
@@ -75,6 +80,7 @@ steps:
             if [[ "<<parameters.job_type>>" == "deployment" ]];then
               #deployments always send pipeline build success.
               echo "This job is a deployment, the orb will notify Jira that any pedning build was successful"
+              export JIRA_DEPLOY_STATUS=${JIRA_BUILD_STATUS}
               export JIRA_BUILD_STATUS="successful"
               generate_json_payload_build
               post_to_jira "build"
@@ -196,27 +202,26 @@ steps:
               # waiting on manual apporval, indicate that
               OUTCOME_STATUS="pending"
               echo "Downstream job is approval, checking for deployments on the other side"
-              My_DEP_JOBS=$(jq -r --argjson jobid ${job} '.items[] | select(.dependencies[] | contains($jobid)) | .name' /tmp/workflow_jobs.json)
+              My_DEP_JOBS=$(jq -r --arg jobid "${job}" '.items[] | select(.dependencies[] | contains($jobid)) | .name' /tmp/workflow_jobs.json)
               fetch https://github.com/gsf/yaml2json/releases/download/1.0/yaml2json-linux-amd64 yaml2json
               chmod a+x yaml2json
               jq -r '.Dispatched.ConfigYml' /.circleci-runner-config.json > /tmp/config.yml
               ./yaml2json /tmp/config.yml > /tmp/config.json
-              for dep_job_name in ${My_DEP_JOBS}; do
-
+              while read -r dep_job_name; do
+                echo "Checking if future job: ${dep_job_name} is a deployment."
                 IS_DEPLOY=$(jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira") | .run.command | contains("deployment\" == \"deployment")' /tmp/config.json)
                 if [ "$IS_DEPLOY" == "true" ];then
                   echo "Next job is deploy, mark pipeline successful, deploy pending"
-                  OUTCOME_STATUS="successful"
                   # things get meta here.  We dump the orbified config's command to a bash file and run it, first setting env  `INTERNAL_STATUS_OVERRIDE`
                   # That valye ebing present will circumvent status logic but respect env type, name, etc from the deployment step.
-                  jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira")' | .run.command > /tmp/future_step.bash
-                  $(INTERNAL_STATUS_OVERRIDE="pending" bash /tmp/future_step.bash) || echo "Future deployment pending status failed, resuming pipeline status."
-                  break
+                  jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira") | .run.command' /tmp/config.json > /tmp/future_step.bash
+                  CIRCLE_JOB=${dep_job_name} INTERNAL_STATUS_OVERRIDE="pending" source /tmp/future_step.bash
+                  # deloyments send build success, we're DONE.
+                  exit 0
                 else
                   echo "Next job does not appear to be a deployment, continue looking for deployments or send pending on workflow."
                 fi
-              done
-              break
+              done \<<< "$My_DEP_JOBS"
             fi
           done
           export JIRA_BUILD_STATUS=$OUTCOME_STATUS
@@ -272,7 +277,7 @@ steps:
           echo {} | jq \
           --arg time_str "$(date +%s)" \
           --arg lastUpdated "${iso_time}" \
-          --arg state "${JIRA_BUILD_STATUS}" \
+          --arg state "${JIRA_DEPLOY_STATUS}" \
           --arg buildNumber "${CIRCLE_BUILD_NUM}" \
           --arg pipelineNumber "${CIRCLE_PIPELINE_NUMBER}" \
           --arg projectName "${CIRCLE_PROJECT_REPONAME}" \
@@ -360,3 +365,10 @@ steps:
         source <<parameters.state_path>>
         run
         rm -f <<parameters.state_path>>
+  - when:
+      condition: <<parameters.debug>>
+      steps:
+        - store_artifacts:
+            path: /tmp/
+            destination: jira-debug
+            when: always
