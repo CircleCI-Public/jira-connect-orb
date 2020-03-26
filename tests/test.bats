@@ -175,7 +175,7 @@ function setup {
 
 
   #
-  # now deployments
+  # now deployment
   #
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
