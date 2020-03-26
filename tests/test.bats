@@ -45,7 +45,7 @@ function setup {
 @test "3: Execution of Notify Script Works with env vars" {
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
-  export CIRCLE_BUILD_NUM="358"
+  export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="lint"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
@@ -73,7 +73,7 @@ function setup {
 
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="5ddcc736-89ec-477b-bbd6-ec4cbbf5f211"
-  export CIRCLE_BUILD_NUM="358"
+  export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
@@ -115,7 +115,7 @@ function setup {
 @test "6: Execution of Notify Script Works for Deployments" {
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
-  export CIRCLE_BUILD_NUM="296"
+  export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="lint"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
@@ -147,7 +147,7 @@ function setup {
  
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
-  export CIRCLE_BUILD_NUM="768"
+  export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
   export CIRCLE_PROJECT_USERNAME="eddiewebb"
   export CIRCLE_SHA1="aef3425"
@@ -177,7 +177,7 @@ function setup {
   # now deployments
   #
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
-  export CIRCLE_BUILD_NUM="768"
+  export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
   export CIRCLE_PROJECT_USERNAME="eddiewebb"
   export CIRCLE_SHA1="aef3425"
