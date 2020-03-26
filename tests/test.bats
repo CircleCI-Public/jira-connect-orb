@@ -142,7 +142,6 @@ function setup {
 }
 
 
-
 @test "7: Spec Test - Confirm ids and numbers and sequences per Jira api" {
  
   # and the infomprovied by a CCI container
