@@ -149,7 +149,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
-  export CIRCLE_PROJECT_USERNAME="eddiewebb"
+  export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
   export CIRCLE_REPOSITORY_URL="https://github.com/CircleCI-Public/jira-connect-orb"
