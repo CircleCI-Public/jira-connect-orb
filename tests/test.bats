@@ -202,3 +202,14 @@ function setup {
   assert_jq_match '.deployments[0].pipeline.id' "${CIRCLE_PROJECT_REPONAME}" /tmp/jira-status.json
 }
 
+@test "8: Basic expansion with serviceID" {
+  # given
+  process_config_with tests/cases/simple_with_service_ID.yml
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 5
+  assert_jq_match '.jobs["build"].steps[0].run.command' 'echo "hello"'
+  assert_jq_match '.jobs["build"].steps[4].run.name' 'Update status in Atlassian Jira'
+
+}
