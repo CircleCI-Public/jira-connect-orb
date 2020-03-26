@@ -163,6 +163,7 @@ function setup {
   # when out command is called
   jq -r '.jobs["build"].steps[4].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  echo $output > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.out
   
   # then is passes
   [[ "$status" == "0" ]]
