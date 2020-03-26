@@ -6,5 +6,5 @@ jobs:
     steps:
       - run: echo "hello"
       - jira/notify:
-          token_name: "MY_CIRCLE_TOKEN"
-
+          state_path:  /tmp/jira.status
+          service_id: "ISD"
