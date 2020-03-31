@@ -244,7 +244,7 @@ steps:
             exit 0
           fi
 
-          case "<<parameters.job_type" in
+          case "<<parameters.job_type>>" in
             "build")
               if jq -e '.unknownIssueKeys[0]' /tmp/curl_response.txt > /dev/null; then
                 echo "ERROR: unknown issue key"
