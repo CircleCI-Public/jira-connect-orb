@@ -74,7 +74,7 @@ steps:
         }
 
         verify_api_key () {
-          URL="https://circleci.com/api/v2/me?circle-token=$<<parameters.token_name>>"
+          URL="https://circleci.com/api/v2/me"
           fetch $URL /tmp/me.json
           jq -e '.name' /tmp/me.json
         }
@@ -244,14 +244,35 @@ steps:
             exit 0
           fi
 
-          if jq -e '.acceptedBuilds[0]' /tmp/curl_response.txt > /dev/null || jq -e '.acceptedDeployments[0]' /tmp/curl_response.txt > /dev/null; then
-            echo "Success!"
-          else
-            echo "No Jira keys associated with: ${ISSUE_KEYS}."
-          fi
-          jq '.' /tmp/curl_response.txt
-        }
+          case "<<parameters.job_type" in
+            "build")
+              if jq -e '.unknownIssueKeys[0]' /tmp/curl_response.txt > /dev/null; then
+                echo "ERROR: unknown issue key"
+                jq '.' /tmp/curl_response.txt
+                exit 0
+              fi
+            ;;
+            "deployment")
+              if jq -e '.unknownAssociations[0]' /tmp/curl_response.txt > /dev/null; then
+                echo "ERROR: unknown association"
+                jq '.' /tmp/curl_response.txt
+                exit 0
+              fi
+              if jq -e '.rejectedDeployments[0]' /tmp/curl_response.txt > /dev/null; then
+                echo "ERROR: Deployment rejected"
+                jq '.' /tmp/curl_response.txt
+                exit 0
+              fi
+            ;;
+          esac
 
+          # If reached this point, the deployment was a success.
+          echo
+          jq '.' /tmp/curl_response.txt
+          echo
+          echo
+          echo "Success!"
+        }
 
         # kick off
         source <<parameters.state_path>>
