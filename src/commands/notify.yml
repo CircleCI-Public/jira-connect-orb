@@ -74,7 +74,7 @@ steps:
         }
 
         verify_api_key () {
-          URL="https://circleci.com/api/v2/me"
+          URL="https://circleci.com/api/v2/me?circle-token=$<<parameters.token_name>>"
           fetch $URL /tmp/me.json
           jq -e '.name' /tmp/me.json
         }

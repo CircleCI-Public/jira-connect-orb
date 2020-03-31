@@ -59,9 +59,10 @@ function setup {
 
   # when out command is called
   jq -r '.jobs["build"].steps[4].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
-
-  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
   
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  echo $output > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}-builds.out
+
   # then is passes
   [[ "$status" == "0" ]]
 
@@ -212,5 +213,5 @@ function setup {
   assert_jq_match '.jobs["build"].steps | length' 5
   assert_jq_match '.jobs["build"].steps[0].run.command' 'echo "hello"'
   assert_jq_match '.jobs["build"].steps[4].run.name' 'Update status in Atlassian Jira'
-
+  echo $output > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}-deploy.out
 }
