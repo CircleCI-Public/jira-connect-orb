@@ -114,7 +114,8 @@ workflows:
           bot-token-variable: GHI_TOKEN
           bot-user: cpe-bot
           fail-if-semver-not-indicated: true
-          publish-version-tag: false
+          publish-version-tag: true
+          ssh-fingerprints: 8a:6b:e8:d5:90:56:3e:70:8d:a5:4e:74:50:07:8f:8e
           requires:
             - integration-test-1
           filters:
