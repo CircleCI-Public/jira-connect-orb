@@ -3,7 +3,7 @@ version: 2.1
 # add your orb below, to be used in integration tests (note: a @dev:alpha
 # release must exist.);
 orbs:
-  jira: circleci/jira@dev:alpha
+  jira: circleci/jira@<<pipeline.parameters.dev-orb-version>>
   orb-tools: circleci/orb-tools@9.0
   circleci-cli: circleci/circleci-cli@0.1
 
