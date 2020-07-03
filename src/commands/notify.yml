@@ -148,6 +148,7 @@ steps:
             # no need to waste time figruging out where we are, it rboke.
             export JIRA_BUILD_STATUS="failed"
             break
+          fi
 
           if [ "<<parameters.job_type>>" != "deployment" ]; then
               # deployments are special, cause they pass or fail alone.
