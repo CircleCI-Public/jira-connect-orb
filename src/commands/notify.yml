@@ -105,7 +105,7 @@ steps:
         fetch () {
           URL="$1"
           OFILE="$2"
-          RESP=$(curl -L -w "%{http_code}" -s <<# parameters.token_name >> --user "${<<parameters.token_name>>}:" <</parameters.token_name>> \
+          RESP=$(curl -w "%{http_code}" -s <<# parameters.token_name >> --user "${<<parameters.token_name>>}:" <</parameters.token_name>> \
           -o "${OFILE}" \
           "${URL}")
 
