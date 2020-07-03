@@ -3,9 +3,9 @@ version: 2.1
 # add your orb below, to be used in integration tests (note: a @dev:alpha
 # release must exist.);
 orbs:
-  jira: circleci/jira@dev:alpha
+  jira: circleci/jira@<<pipeline.parameters.dev-orb-version>>
   orb-tools: circleci/orb-tools@9.0
-  circleci-cli: circleci/circleci-cli@0.1.7
+  circleci-cli: circleci/circleci-cli@0.1
 
 # Pipeline parameters
 parameters:
@@ -50,6 +50,8 @@ jobs:
           command: |
             export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_SHA1:0:7}"
             bats tests
+      - store_artifacts:
+          path: /tmp
 
 workflows:
   # This `lint-pack_validate_publish-dev` workflow will run on any commit.
@@ -95,7 +97,8 @@ workflows:
       # integration tests of your choosing
 
       # an example job
-      - integration-test-1
+      - integration-test-1:
+          context: orb-publishing
 
       # publish a semver version of the orb. relies on
       # the commit subject containing the text "[semver:patch|minor|major|skip]"
@@ -111,7 +114,8 @@ workflows:
           bot-token-variable: GHI_TOKEN
           bot-user: cpe-bot
           fail-if-semver-not-indicated: true
-          publish-version-tag: false
+          publish-version-tag: true
+          ssh-fingerprints: 8a:6b:e8:d5:90:56:3e:70:8d:a5:4e:74:50:07:8f:8e
           requires:
             - integration-test-1
           filters:

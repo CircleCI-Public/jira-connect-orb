@@ -85,6 +85,7 @@ steps:
               generate_json_payload_build
               post_to_jira "build"
             fi
+            check_workflow_status
             generate_json_payload_<<parameters.job_type>>
             post_to_jira
           else
@@ -96,9 +97,9 @@ steps:
         }
 
         verify_api_key () {
-          URL="https://circleci.com/api/v2/me"
+          URL="https://circleci.com/api/v2/me?circle-token=${<<parameters.token_name>>}"
           fetch $URL /tmp/me.json
-          jq -e '.name' /tmp/me.json
+          jq -e '.login' /tmp/me.json
         }
 
         fetch () {
@@ -147,6 +148,13 @@ steps:
             # no need to waste time figruging out where we are, it rboke.
             export JIRA_BUILD_STATUS="failed"
             break
+
+          if [ "<<parameters.job_type>>" != "deployment" ]; then
+              # deployments are special, cause they pass or fail alone.
+              # but jobs are stuck togehter, and they must respect status of workflow
+              if [[ "$WORKFLOW_STATUS" == "fail"* ]]; then
+                export JIRA_BUILD_STATUS="failed"
+              fi
           fi
 
           # deployments are special, cause they pass or fail alone.
@@ -289,8 +297,8 @@ steps:
           --arg workflowId "${CIRCLE_WORKFLOW_ID}" \
           --arg workflowUrl "https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}" \
           --arg repoName "${CIRCLE_PROJECT_REPONAME}" \
-          --arg pipelineDisplay "${CIRCLE_PROJECT_REPONAME}"  \
-          --arg deployDisplay "#${CIRCLE_PIPELINE_NUMBER} - ${CIRCLE_JOB}"  \
+          --arg pipelineDisplay "#${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_PROJECT_REPONAME}"  \
+          --arg deployDisplay "#${CIRCLE_PIPELINE_NUMBER}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
           --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_JOB} <<parameters.environment>>" \
           --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
           --arg envName "<<parameters.environment>>" \
@@ -352,14 +360,35 @@ steps:
             exit 0
           fi
 
-          if jq -e '.acceptedBuilds[0]' /tmp/curl_response.txt > /dev/null || jq -e '.acceptedDeployments[0]' /tmp/curl_response.txt > /dev/null; then
-            echo "Success!"
-          else
-            echo "No Jira keys associated with: ${ISSUE_KEYS}."
-          fi
-          jq '.' /tmp/curl_response.txt
-        }
+          case "<<parameters.job_type>>" in
+            "build")
+              if jq -e '.unknownIssueKeys[0]' /tmp/curl_response.txt > /dev/null; then
+                echo "ERROR: unknown issue key"
+                jq '.' /tmp/curl_response.txt
+                exit 0
+              fi
+            ;;
+            "deployment")
+              if jq -e '.unknownAssociations[0]' /tmp/curl_response.txt > /dev/null; then
+                echo "ERROR: unknown association"
+                jq '.' /tmp/curl_response.txt
+                exit 0
+              fi
+              if jq -e '.rejectedDeployments[0]' /tmp/curl_response.txt > /dev/null; then
+                echo "ERROR: Deployment rejected"
+                jq '.' /tmp/curl_response.txt
+                exit 0
+              fi
+            ;;
+          esac
 
+          # If reached this point, the deployment was a success.
+          echo
+          jq '.' /tmp/curl_response.txt
+          echo
+          echo
+          echo "Success!"
+        }
 
         # kick off
         source <<parameters.state_path>>
