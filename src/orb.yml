@@ -8,7 +8,7 @@ description: >
   Please see [CircleCI Jira integration docs](https://circleci.com/docs/2.0/jira-plugin/)
 
 orbs:
-  jq: circleci/jq@2.1
+  jq: circleci/jq@2.2
 
 display:
   home_url: https://circleci.com/docs/2.0/jira-plugin/

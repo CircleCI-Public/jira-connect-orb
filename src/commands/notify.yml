@@ -31,7 +31,8 @@ parameters:
     type: string
 
 steps:
-  - jq/install
+  - jq/install:
+      when: always
 
   - run:
       name: JIRA - Setting Failure Condition
