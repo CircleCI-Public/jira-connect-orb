@@ -19,7 +19,7 @@ parameters:
     default: "development"
   state_path:
     description: Relative or absolute path to a store build state for orb.
-    default: "./circleci-orb-jira.status"
+    default: "/tmp/circleci-orb-jira.status"
     type: string
   service_id:
     description: Specify the JSD service ID for the project this notification targets.
@@ -29,6 +29,20 @@ parameters:
     description: Override the default project key regexp if your project keys follow a different format.
     default: "[A-Z]{2,30}-[0-9]+"
     type: string
+  override_status:
+    description: |
+      Use this to send a fixed status when deeper insight than success/fail is desired.
+      Examples: 1) Use at the start of LONG jobs to send a "in_progress" status to Jira.
+      2) Use as the final step before an approval job to send a "pending"
+    default: "actual"
+    enum: ["pending", "in_progress", "successful", "failed", "cancelled", "unknown", "actual"]
+    type:  enum
+  debug:
+    description: |
+      Verbose logging and debug artifacts
+    type:  boolean
+    default: false
+
 
 steps:
   - jq/install:
@@ -50,7 +64,7 @@ steps:
       when: always
       name: Update status in Atlassian Jira
       command: |
-        : ${<<parameters.token_name>>:?"Please provide a CircleCI API token for this orb to work!"} >&2
+        : ${<< parameters.token_name >>:?"Please provide a CircleCI API token for this orb to work!"} >&2
         if [[ $(echo $CIRCLE_REPOSITORY_URL | grep github.com) ]]; then
           VCS_TYPE=github
         else
@@ -60,14 +74,23 @@ steps:
         run () {
           verify_api_key
           parse_jira_key_array
+          load_workflow_state
           HAS_JSD_SERVICE_ID="<< parameters.service_id >>"
             # If you have either an issue key or a service ID
           if [[ -n "${ISSUE_KEYS}" || -n "${HAS_JSD_SERVICE_ID}" ]]; then
+            if [[ "<<parameters.job_type>>" == "deployment" ]];then
+              #deployments always send pipeline build success.
+              echo "This job is a deployment, the orb will notify Jira that any pedning build was successful"
+              export JIRA_DEPLOY_STATUS=${JIRA_BUILD_STATUS}
+              export JIRA_BUILD_STATUS="successful"
+              generate_json_payload_build
+              post_to_jira "build"
+            fi
             check_workflow_status
             generate_json_payload_<<parameters.job_type>>
             post_to_jira
           else
-              # If no service is or issue key is found.
+            # If no service is or issue key is found.
             echo "No Jira issue keys found in commit subjects or branch name, skipping."
             echo "No service ID selected. Please add the service_id parameter for JSD deployments."
             exit 0
@@ -107,12 +130,26 @@ steps:
           fi
         }
 
-        check_workflow_status () {
+        load_workflow_state () {
+          source <<parameters.state_path>>
           URL="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}"
           fetch $URL /tmp/workflow.json
           export WORKFLOW_STATUS=$(jq -r '.status' /tmp/workflow.json)
           export CIRCLE_PIPELINE_NUMBER=$(jq -r '.pipeline_number' /tmp/workflow.json)
-          echo "This job is passing, however another job in workflow is ${WORKFLOW_STATUS}"
+          echo "This job is ${JIRA_BUILD_STATUS}, however another job in workflow is ${WORKFLOW_STATUS}"
+
+          if [ "actual" != "${INTERNAL_STATUS_OVERRIDE:-<<parameters.override_status>>}" ];then
+            echo "Override parameter present on orb. Setting status to: ${INTERNAL_STATUS_OVERRIDE:-<<parameters.override_status>>}"
+            export JIRA_BUILD_STATUS="${INTERNAL_STATUS_OVERRIDE:-<<parameters.override_status>>}"
+            return
+          fi
+
+
+          if [ "$JIRA_BUILD_STATUS" == "failed" ];then
+            # no need to waste time figruging out where we are, it rboke.
+            export JIRA_BUILD_STATUS="failed"
+            break
+          fi
 
           if [ "<<parameters.job_type>>" != "deployment" ]; then
               # deployments are special, cause they pass or fail alone.
@@ -121,7 +158,86 @@ steps:
                 export JIRA_BUILD_STATUS="failed"
               fi
           fi
+
+          # deployments are special, cause they pass or fail alone.
+          if [ "deployment" == "<<parameters.job_type>>" ]; then
+            export JIRA_BUILD_STATUS=${JIRA_BUILD_STATUS}
+            return
+          fi
+
+          # All normal jobs must respect status of workflow. These are the possible "active" oens
+          case $WORKFLOW_STATUS in
+            "fail"*)
+              export JIRA_BUILD_STATUS="failed"
+              ;;
+            "error")
+              export JIRA_BUILD_STATUS="failed"
+              ;;
+            "cancel"*)
+              #workflow is waiting on manual approval
+              export JIRA_BUILD_STATUS="cancelled"
+              ;;
+            *)
+              #workflow is not over, but this may r may not be final job
+              get_dependent_job_status
+              ;;
+          esac
+
+          echo "Status set to ${JIRA_BUILD_STATUS}"
         }
+
+        # return 'pending' if any dependet job is approval, else 'in_progress'
+        get_dependent_job_status () {
+          source <<parameters.state_path>>
+          OUTCOME_STATUS=${JIRA_BUILD_STATUS}
+          URL="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
+          fetch $URL /tmp/workflow_jobs.json
+          MY_ID=$(jq --argjson jobnum ${CIRCLE_BUILD_NUM} '.items[] | select(.job_number == $jobnum) | .id' /tmp/workflow_jobs.json)
+          # given workflow and job =number we get uuid, and then iterate workflow to find any jobs stating us as dependency.
+          echo "Checking where job with ID: ${MY_ID} fits in larger workflow."
+          DEP_JOBS=$(jq -r --argjson jobid ${MY_ID} '.items[] | select(.dependencies[] | contains($jobid)) | .id' /tmp/workflow_jobs.json)
+          BLOCKED_JOBS=$(jq -r '.items[] | select(.status == "blocked").id' /tmp/workflow_jobs.json)
+
+          if [ "x${BLOCKED_JOBS}" != "x" ];then
+            # there are jobs in the workflow yet to run, override status
+            echo "Downstream jobs found, overriding job status to workflow in_progress"
+            OUTCOME_STATUS="in_progress"
+          fi
+
+          for job in ${DEP_JOBS};do
+            TYPE=$(jq -r --arg jobid "${job}" '.items[] | select(.id == $jobid) | .type' /tmp/workflow_jobs.json)
+            STATUS=$(jq --arg jobid "${job}" '.items[] | select(.id == $jobid) | .status' /tmp/workflow_jobs.json)
+            echo "Job ${job} of type ${TYPE} depends on current, shows status: ${STATUS}"
+            if [ "$TYPE" == "approval" ];then
+              # waiting on manual apporval, indicate that
+              OUTCOME_STATUS="pending"
+              echo "Downstream job is approval, checking for deployments on the other side"
+              My_DEP_JOBS=$(jq -r --arg jobid "${job}" '.items[] | select(.dependencies[] | contains($jobid)) | .name' /tmp/workflow_jobs.json)
+              fetch https://github.com/gsf/yaml2json/releases/download/1.0/yaml2json-linux-amd64 yaml2json
+              chmod a+x yaml2json
+              jq -r '.Dispatched.ConfigYml' /.circleci-runner-config.json > /tmp/config.yml
+              ./yaml2json /tmp/config.yml > /tmp/config.json
+              while read -r dep_job_name; do
+                echo "Checking if future job: ${dep_job_name} is a deployment."
+                IS_DEPLOY=$(jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira") | .run.command | contains("deployment\" == \"deployment")' /tmp/config.json)
+                if [ "$IS_DEPLOY" == "true" ];then
+                  echo "Next job is deploy, mark pipeline successful, deploy pending"
+                  # things get meta here.  We dump the orbified config's command to a bash file and run it, first setting env  `INTERNAL_STATUS_OVERRIDE`
+                  # That valye ebing present will circumvent status logic but respect env type, name, etc from the deployment step.
+                  jq -r --arg jobname "${dep_job_name}" '.jobs[$jobname].steps[] | select(.>={}) | select(.run.name =="Update status in Atlassian Jira") | .run.command' /tmp/config.json > /tmp/future_step.bash
+                  CIRCLE_JOB=${dep_job_name} INTERNAL_STATUS_OVERRIDE="pending" source /tmp/future_step.bash
+                  # deloyments send build success, we're DONE.
+                  exit 0
+                else
+                  echo "Next job does not appear to be a deployment, continue looking for deployments or send pending on workflow."
+                fi
+              done \<<< "$My_DEP_JOBS"
+            fi
+          done
+          export JIRA_BUILD_STATUS=$OUTCOME_STATUS
+        }
+
+
 
         generate_json_payload_build () {
           iso_time=$(date '+%Y-%m-%dT%T%z'| sed -e 's/\([0-9][0-9]\)$/:\1/g')
@@ -171,7 +287,7 @@ steps:
           echo {} | jq \
           --arg time_str "$(date +%s)" \
           --arg lastUpdated "${iso_time}" \
-          --arg state "${JIRA_BUILD_STATUS}" \
+          --arg state "${JIRA_DEPLOY_STATUS}" \
           --arg buildNumber "${CIRCLE_BUILD_NUM}" \
           --arg pipelineNumber "${CIRCLE_PIPELINE_NUMBER}" \
           --arg projectName "${CIRCLE_PROJECT_REPONAME}" \
@@ -231,12 +347,13 @@ steps:
 
 
         post_to_jira () {
+          TYPE=${1:-<<parameters.job_type>>}
           HTTP_STATUS=$(curl \
           -u "${<<parameters.token_name>>}:" \
           -s -w "%{http_code}" -o /tmp/curl_response.txt \
           -H "Content-Type: application/json" \
           -H "Accept: application/json" \
-          -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
+          -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/${TYPE}" --data @/tmp/jira-status.json)
 
           echo "Results from Jira: "
           if [ "${HTTP_STATUS}" != "200" ];then
@@ -279,3 +396,11 @@ steps:
         source <<parameters.state_path>>
         run
         rm -f <<parameters.state_path>>
+  - when:
+      condition: <<parameters.debug>>
+      steps:
+        - store_artifacts:
+            path: /tmp/
+            destination: jira-debug
+            when: always
+
