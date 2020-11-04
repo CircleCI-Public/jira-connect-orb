@@ -29,6 +29,10 @@ parameters:
     description: Override the default project key regexp if your project keys follow a different format.
     default: "[A-Z]{2,30}-[0-9]+"
     type: string
+  scan_commit_body:
+    description: Whether or not to scan the Commit Body for the JIRA Issue Tag. Default is false.
+    default: false
+    type: boolean
 
 steps:
   - jq/install:
@@ -99,7 +103,7 @@ steps:
           # must save as ISSUE_KEYS='["CC-4"]'
           fetch https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM} /tmp/job_info.json
           # see https://jqplay.org/s/TNq7c5ctot
-          ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("(<<parameters.issue_regexp>>)")   | .[] ] + [.all_commit_details[].branch | scan("(<<parameters.issue_regexp>>)")   | .[] ] + [if .branch then .branch else "" end | scan("(<<parameters.issue_regexp>>)")  | . [] ]')
+          ISSUE_KEYS=$(cat /tmp/job_info.json | jq '[.all_commit_details[].subject | scan("(<<parameters.issue_regexp>>)")   | .[] ] + [.all_commit_details[].branch | scan("(<<parameters.issue_regexp>>)")   | .[] ] + [if .branch then .branch else "" end | scan("(<<parameters.issue_regexp>>)")  | . [] ] + [if <<parameters.scan_commit_body>> then .all_commit_details[].body else "" end | scan("(<<parameters.issue_regexp>>)")   | .[] ]')
           if [ -z "$ISSUE_KEYS" ]; then
             # No issue keys found.
             echo "No issue keys found. This build does not contain a match for a Jira Issue. Please add your issue ID to the commit message or within the branch name."
