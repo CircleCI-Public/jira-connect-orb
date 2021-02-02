@@ -100,8 +100,6 @@ steps:
         }
 
         parse_jira_key_array () {
-          # Temporary
-          fetch https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM} /tmp/job_info.json
           # must save as ISSUE_KEYS='["CC-4"]'
           fetch "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}" /tmp/workflow_info.json
           PIPELINE_ID=$(cat /tmp/workflow_info.json | jq -r .pipeline_id)
