@@ -102,6 +102,7 @@ steps:
         parse_jira_key_array () {
           # must save as ISSUE_KEYS='["CC-4"]'
           fetch "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}" /tmp/workflow_info.json
+          cat /tmp/workflow_info.json
           PIPELINE_ID=$(cat /tmp/workflow_info.json | jq -r .pipeline_id)
           fetch "https://circleci.com/api/v2/pipeline/${CIRCLE_PIPELINE_NUMBER}" /tmp/pipeline_info.json
           # see https://jqplay.org/s/TNq7c5ctot
