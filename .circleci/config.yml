@@ -50,6 +50,7 @@ jobs:
           command: |
             export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_SHA1:0:7}"
             bats tests
+      - run: tar -zcvf /tmp/test-tmp.tar.gz /tmp
       - store_artifacts:
           path: /tmp
 

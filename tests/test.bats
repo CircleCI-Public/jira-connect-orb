@@ -67,7 +67,6 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success
-  cat /tmp/curl_response.txt
   assert_jq_match '.acceptedBuilds | length' 1 /tmp/curl_response.txt # acc Deployments has one object
 }
 
