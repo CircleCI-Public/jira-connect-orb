@@ -54,4 +54,3 @@ steps:
       when: always
       name: Update status in Atlassian Jira
       command: <<include(scripts/notify.sh)>>
-        

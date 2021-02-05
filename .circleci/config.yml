@@ -4,8 +4,9 @@ version: 2.1
 # release must exist.);
 orbs:
   jira: circleci/jira@<<pipeline.parameters.dev-orb-version>>
-  orb-tools: circleci/orb-tools@9.0
+  orb-tools: circleci/orb-tools@10.0
   circleci-cli: circleci/circleci-cli@0.1
+  bats: circleci/bats@1.0.0
 
 # Pipeline parameters
 parameters:
@@ -31,26 +32,12 @@ jobs:
     steps:
       - checkout
       - circleci-cli/install
-      - run:
-          name: Install BATS and YQ
-          command: |
-            cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
-            sudo ./install.sh /usr/local
-            echo
-            echo "BATS installed"
-            echo
-            curl -L https://github.com/mikefarah/yq/releases/download/2.1.1/yq_linux_amd64 -o yq
-            chmod a+x yq
-            sudo mv yq /usr/local/bin/
-            echo
-            echo "YQ installed"
-            echo
+      - bats/install
       - run:
           name: Test against published dev version using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_SHA1:0:7}"
             bats tests
-      - run: tar -zcvf /tmp/test-tmp.tar.gz /tmp
       - store_artifacts:
           path: /tmp
 
