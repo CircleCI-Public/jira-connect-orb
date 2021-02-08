@@ -19,6 +19,7 @@ function setup {
   export JIRA_JOB_TYPE="build"
   export JIRA_ENVIRONMENT_TYPE="development"
   export JIRA_STATE_PATH="/tmp/jira.status"
+  export JIRA_SCAN_BODY="false"
 }
 
 @test "1: Execution of Notify Script Works with env vars" {
