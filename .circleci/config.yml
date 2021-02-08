@@ -49,7 +49,7 @@ jobs:
             export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_SHA1:0:7}"
             bats tests
       - store_artifacts:
-          path: /tmp
+          path: /tmp/jira-tests/
 
 workflows:
   # This `lint-pack_validate_publish-dev` workflow will run on any commit.
