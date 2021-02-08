@@ -15,7 +15,7 @@ parameters:
     default: "dev:alpha"
 
 jobs:
-  integration-test-1:
+  bats-testing:
     docker:
       - image: cimg/base:2020.02
     steps:
@@ -64,7 +64,7 @@ workflows:
   integration-tests_prod-release:
     when: << pipeline.parameters.run-integration-tests >>
     jobs:
-      - integration-test-1:
+      - bats-testing:
           context: orb-publishing
       - orb-tools/dev-promote-prod-from-commit-subject:
           orb-name: circleci/jira
@@ -77,7 +77,7 @@ workflows:
           publish-version-tag: true
           ssh-fingerprints: 8a:6b:e8:d5:90:56:3e:70:8d:a5:4e:74:50:07:8f:8e
           requires:
-            - integration-test-1
+            - bats-testing
           filters:
             branches:
               only: master

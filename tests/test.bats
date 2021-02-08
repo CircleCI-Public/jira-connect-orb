@@ -21,11 +21,11 @@ function setup {
   INLINE_ORB_NAME="jira"
 
   export JIRA_ISSUE_REGEX="[A-Z]{2,30}-[0-9]+"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   export JIRA_JOB_TYPE="build"
   export JIRA_ENVIRONMENT_TYPE="development"
   export JIRA_STATE_PATH="${RESULT_DIR}/jira.status"
   export JIRA_SCAN_BODY="false"
+  export CIRCLECI_TOKEN="${CIRCLE_TOKEN}"
 }
 
 @test "1: Execution of Notify Script Works with env vars" {
