@@ -28,6 +28,7 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
+  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
 
   run bash src/scripts/notify.sh
