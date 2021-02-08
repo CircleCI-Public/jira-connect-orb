@@ -7,6 +7,7 @@ load bats_helper
 # setup is run beofre each test
 function setup {
   export RESULT_DIR="${BATS_TMPDIR}/jira-tests"
+  mkdir -p $RESULT_DIR
   INPUT_PROJECT_CONFIG=${RESULT_DIR}/input_config-${BATS_TEST_NUMBER}
   PROCESSED_PROJECT_CONFIG=${RESULT_DIR}/packed_config-${BATS_TEST_NUMBER} 
   JSON_PROJECT_CONFIG=${RESULT_DIR}/json_config-${BATS_TEST_NUMBER} 
