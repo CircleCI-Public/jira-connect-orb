@@ -33,6 +33,10 @@ parameters:
     description: Whether or not to scan the Commit Body for the JIRA Issue Tag. Default is false.
     default: false
     type: boolean
+  manual_tag:
+    description: Manually set tag for the Jira issue, rather than scanning commit message. Useful when triggering this command via the API.
+    default: ""
+    type: string
 
 steps:
   - jq/install:
@@ -54,3 +58,12 @@ steps:
       when: always
       name: Update status in Atlassian Jira
       command: <<include(scripts/notify.sh)>>
+      environment:
+        CIRCLECI_TOKEN: <<parameters.token_name>>
+        JIRA_SERVICE_ID: <<parameters.service_id>>
+        JIRA_JOB_TYPE: <<parameters.job_type>>
+        JIRA_ISSUE_REGEX: <<parameters.issue_regexp>>
+        JIRA_SCAN_BODY: <<parameters.scan_commit_body>>
+        JIRA_ENVIRONMENT: <<parameters.environment>>
+        JIRA_ENVIRONMENT_TYPE: <<parameters.environment_type>>
+        JIRA_STATE_PATH: <<parameters.state_path>>

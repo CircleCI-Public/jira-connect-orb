@@ -1,4 +1,4 @@
-: ${<<parameters.token_name>>:?"Please provide a CircleCI API token for this orb to work!"} >&2
+: ${CIRCLECI_TOKEN:?"Please provide a CircleCI API token for this orb to work!"} >&2
 if [[ $(echo $CIRCLE_REPOSITORY_URL | grep github.com) ]]; then
   VCS_TYPE=github
 else
@@ -8,11 +8,10 @@ fi
 run () {
   verify_api_key
   parse_jira_key_array
-  HAS_JSD_SERVICE_ID="<< parameters.service_id >>"
     # If you have either an issue key or a service ID
-  if [[ -n "${ISSUE_KEYS}" || -n "${HAS_JSD_SERVICE_ID}" ]]; then
+  if [[ -n "${ISSUE_KEYS}" || -n "${JIRA_SERVICE_ID}" ]]; then
     check_workflow_status
-    generate_json_payload_<<parameters.job_type>>
+    generate_json_payload_$JIRA_JOB_TYPE
     post_to_jira
   else
       # If no service is or issue key is found.
@@ -23,7 +22,7 @@ run () {
 }
 
 verify_api_key () {
-  URL="https://circleci.com/api/v2/me?circle-token=${<<parameters.token_name>>}"
+  URL="https://circleci.com/api/v2/me?circle-token=${CIRCLECI_TOKEN}"
   fetch $URL /tmp/me.json
   jq -e '.login' /tmp/me.json
 }
@@ -31,9 +30,12 @@ verify_api_key () {
 fetch () {
   URL="$1"
   OFILE="$2"
-  RESP=$(curl -w "%{http_code}" -s <<# parameters.token_name >> --user "${<<parameters.token_name>>}:" <</parameters.token_name>> \
-  -o "${OFILE}" \
-  "${URL}")
+
+  if [ -n "$JIRA_TOKEN_NAME" ]; then
+      set -- "$@" --user "${JIRA_TOKEN_NAME}:"
+  fi
+
+  RESP=$(curl -w "%{http_code}" -s "$@" -o "${OFILE}" "${URL}")
 
   if [[ "$RESP" != "20"* ]]; then
     echo "Curl failed with code ${RESP}. full response below."
@@ -43,13 +45,17 @@ fetch () {
 }
 
 parse_jira_key_array () {
-  # must save as ISSUE_KEYS='["CC-4"]'
-  fetch https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM} /tmp/job_info.json
-  fetch "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}" /tmp/workflow_info.json
-  PIPELINE_ID=$(cat /tmp/workflow_info.json | jq -r .pipeline_id)
-  fetch "https://circleci.com/api/v2/pipeline/${PIPELINE_ID}" /tmp/pipeline_info.json
-  # see https://jqplay.org/s/TNq7c5ctot
-  ISSUE_KEYS=$(cat /tmp/pipeline_info.json | jq -r '[.vcs.commit.subject | scan("(<<parameters.issue_regexp>>)") | .[] ] + [.vcs.commit.subject | scan("(<<parameters.issue_regexp>>)")   | .[] ] + [if .branch then .vcs.branch else "" end | scan("(<<parameters.issue_regexp>>)")  | . [] ] + [if <<parameters.scan_commit_body>> then .vcs.commit.body else "" end | scan("(<<parameters.issue_regexp>>)") | .[] ]')
+  if [ -n "$JIRA_MANUAL_TAG" ]; then
+    ISSUE_KEYS=$JIRA_MANUAL_TAG
+  else
+    # must save as ISSUE_KEYS='["CC-4"]'
+    fetch "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}" /tmp/workflow_info.json
+    PIPELINE_ID=$(cat /tmp/workflow_info.json | jq -r .pipeline_id)
+    fetch "https://circleci.com/api/v2/pipeline/${PIPELINE_ID}" /tmp/pipeline_info.json
+    # see https://jqplay.org/s/TNq7c5ctot
+    ISSUE_KEYS=$(cat /tmp/pipeline_info.json | jq -r "[.vcs.commit.subject | scan(\"($JIRA_ISSUE_REGEX)\") | .[] ] + [.vcs.commit.subject | scan(\"($JIRA_ISSUE_REGEX)\")   | .[] ] + [if .branch then .vcs.branch else \"\" end | scan(\"($JIRA_ISSUE_REGEX)\")  | . [] ] + [if $JIRA_SCAN_BODY then .vcs.commit.body else \"\" end | scan(\"($JIRA_ISSUE_REGEX)\") | .[] ]")
+  fi
+
   if [ -z "$ISSUE_KEYS" ]; then
     # No issue keys found.
     echo "No issue keys found. This build does not contain a match for a Jira Issue. Please add your issue ID to the commit message or within the branch name."
@@ -64,7 +70,7 @@ check_workflow_status () {
   export CIRCLE_PIPELINE_NUMBER=$(jq -r '.pipeline_number' /tmp/workflow.json)
   echo "This job is passing, however another job in workflow is ${WORKFLOW_STATUS}"
 
-  if [ "<<parameters.job_type>>" != "deployment" ]; then
+  if [ "$JIRA_JOB_TYPE" != "deployment" ]; then
       # deployments are special, cause they pass or fail alone.
       # but jobs are stuck togehter, and they must respect status of workflow
       if [[ "$WORKFLOW_STATUS" == "fail"* ]]; then
@@ -136,9 +142,10 @@ generate_json_payload_deployment () {
   --arg pipelineDisplay "#${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_PROJECT_REPONAME}"  \
   --arg deployDisplay "#${CIRCLE_PIPELINE_NUMBER}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
   --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_JOB} <<parameters.environment>>" \
-  --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
-  --arg envName "<<parameters.environment>>" \
-  --arg envType "<<parameters.environment_type>>" \
+  --arg envId "${CIRCLE_WORKFLOW_ID}-${JIRA_ENVIRONMENT}" \
+  --arg envName "${JIRA_ENVIRONMENT}" \
+  --arg envType "${JIRA_ENVIRONMENT_TYPE}" \
+  --arg serviceId "${JIRA_SERVICE_ID}" \
   --argjson issueKeys "${ISSUE_KEYS}" \
   '
   ($time_str | tonumber) as $time_num |
@@ -165,7 +172,9 @@ generate_json_payload_deployment () {
           },
           {
             "associationType": "serviceIdOrKeys",
-            "values": ["<< parameters.service_id >>"]
+            "values": [
+              $serviceId
+            ]
           }
         ],
         "environment":{
@@ -182,11 +191,11 @@ generate_json_payload_deployment () {
 
 post_to_jira () {
   HTTP_STATUS=$(curl \
-  -u "${<<parameters.token_name>>}:" \
+  -u "${CIRCLECI_TOKEN}:" \
   -s -w "%{http_code}" -o /tmp/curl_response.txt \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
-  -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/<<parameters.job_type>>" --data @/tmp/jira-status.json)
+  -X POST "https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/jira/${JIRA_JOB_TYPE}" --data @/tmp/jira-status.json)
 
   echo "Results from Jira: "
   if [ "${HTTP_STATUS}" != "200" ];then
@@ -195,7 +204,7 @@ post_to_jira () {
     exit 0
   fi
 
-  case "<<parameters.job_type>>" in
+  case "${JIRA_JOB_TYPE}" in
     "build")
       if jq -e '.unknownIssueKeys[0]' /tmp/curl_response.txt > /dev/null; then
         echo "ERROR: unknown issue key"
@@ -226,6 +235,6 @@ post_to_jira () {
 }
 
 # kick off
-source <<parameters.state_path>>
+source $JIRA_STATE_PATH
 run
-rm -f <<parameters.state_path>>
+rm -f $JIRA_STATE_PATH
