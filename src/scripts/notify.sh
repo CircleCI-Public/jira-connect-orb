@@ -1,3 +1,7 @@
+# Will not run if sourced from another script.
+# This is done so this script may be tested.
+ORB_TEST_ENV="bats-core"
+
 : ${CIRCLECI_TOKEN:?"Please provide a CircleCI API token for this orb to work!"} >&2
 if [[ $(echo $CIRCLE_REPOSITORY_URL | grep github.com) ]]; then
   VCS_TYPE=github
@@ -28,6 +32,10 @@ verify_api_key () {
 }
 
 fetch () {
+  if [ "${0#*$ORB_TEST_ENV}" = "$0" ]; then
+    return 0
+  fi
+
   URL="$1"
   OFILE="$2"
 

@@ -6,6 +6,10 @@ load bats_helper
 
 # setup is run beofre each test
 function setup {
+  source src/scripts/notify.sh
+
+  cp mocks/* /tmp
+
   export RESULT_DIR="${BATS_TMPDIR}/jira-tests"
   mkdir -p $RESULT_DIR
   INPUT_PROJECT_CONFIG=${RESULT_DIR}/input_config-${BATS_TEST_NUMBER}

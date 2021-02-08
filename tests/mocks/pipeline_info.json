@@ -1,0 +1,28 @@
+{
+  "id" : "a23ecf90-8330-44cb-879f-c0c081d3f8cb",
+  "errors" : [ ],
+  "project_slug" : "gh/eddiewebb/circleci-samples",
+  "updated_at" : "2020-02-28T21:51:47.697Z",
+  "number" : 313,
+  "state" : "created",
+  "created_at" : "2020-02-28T21:51:47.697Z",
+  "trigger" : {
+    "received_at" : "2020-02-28T21:51:47.625Z",
+    "type" : "webhook",
+    "actor" : {
+      "login" : "eddiewebb",
+      "avatar_url" : "https://avatars.githubusercontent.com/u/5262154?v=4"
+    }
+  },
+  "vcs" : {
+    "origin_repository_url" : "https://github.com/eddiewebb/circleci-samples",
+    "target_repository_url" : "https://github.com/eddiewebb/circleci-samples",
+    "revision" : "ab96b94cdeb7a27df8e032f0764bfe708f0b523c",
+    "provider_name" : "GitHub",
+    "commit" : {
+      "body" : "",
+      "subject" : "rev orb for CC-26"
+    },
+    "branch" : "master"
+  }
+}
