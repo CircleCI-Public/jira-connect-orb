@@ -18,7 +18,7 @@ function setup {
   export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   export JIRA_JOB_TYPE="build"
   export JIRA_ENVIRONMENT_TYPE="development"
-  export JIRA_STATE_PATH="./circleci-orb-jira.status"
+  export JIRA_STATE_PATH="/tmp/jira.status"
 }
 
 @test "1: Execution of Notify Script Works with env vars" {
