@@ -14,6 +14,11 @@ function setup {
   # the name used in example config files.
   INLINE_ORB_NAME="jira"
 
+  export JIRA_ISSUE_REGEX="[A-Z]{2,30}-[0-9]+"
+  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
+  export JIRA_JOB_TYPE="build"
+  export JIRA_ENVIRONMENT_TYPE="development"
+  export JIRA_STATE_PATH="./circleci-orb-jira.status"
 }
 
 @test "1: Execution of Notify Script Works with env vars" {
@@ -21,6 +26,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="lint"
+  export JIRA_ENVIRONMENT="${CIRCLE_JOB}"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
@@ -28,7 +34,6 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
 
   run bash src/scripts/notify.sh
@@ -47,6 +52,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="5ddcc736-89ec-477b-bbd6-ec4cbbf5f211"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
+  export JIRA_ENVIRONMENT="${CIRCLE_JOB}"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
@@ -54,7 +60,6 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
 
   run bash src/scripts/notify.sh
@@ -75,6 +80,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="lint"
+  export JIRA_ENVIRONMENT="${CIRCLE_JOB}"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
@@ -82,7 +88,6 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
 
   run bash src/scripts/notify.sh
@@ -103,6 +108,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
+  export JIRA_ENVIRONMENT="${CIRCLE_JOB}"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
@@ -110,7 +116,6 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
   process_config_with tests/cases/simple.yml
 
@@ -133,6 +138,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
+  export JIRA_ENVIRONMENT="${CIRCLE_JOB}"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
@@ -140,7 +146,6 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
  
   run bash src/scripts/notify.sh
@@ -160,6 +165,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="lint"
+  export JIRA_ENVIRONMENT="${CIRCLE_JOB}"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
@@ -167,7 +173,6 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
 
   run bash src/scripts/notify.sh
@@ -188,6 +193,7 @@ function setup {
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="lint"
+  export JIRA_ENVIRONMENT="${CIRCLE_JOB}"
   export CIRCLE_PROJECT_USERNAME="circleci-public"
   export CIRCLE_SHA1="aef3425"
   export CIRCLE_PROJECT_REPONAME="jira-connect-orb"
@@ -195,7 +201,6 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
-  export CIRCLECI_TOKEN="$CIRCLE_TOKEN"
   echo 'export JIRA_BUILD_STATUS="successful"' >> /tmp/jira.status
 
   run bash src/scripts/notify.sh
