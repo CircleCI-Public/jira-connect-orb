@@ -91,7 +91,6 @@ steps:
           -o "${OFILE}" \
           "${URL}")
 
-          echo "${RESP}:${URL}"
           if [[ "$RESP" != "20"* ]]; then
             echo "Curl failed with code ${RESP}. full response below."
             cat $OFILE
