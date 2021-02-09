@@ -21,7 +21,7 @@
     "provider_name" : "GitHub",
     "commit" : {
       "body" : "",
-      "subject" : "rev orb for CC-26"
+      "subject" : "Message for TEST-1"
     },
     "branch" : "master"
   }
