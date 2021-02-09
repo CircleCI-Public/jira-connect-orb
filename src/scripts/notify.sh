@@ -32,7 +32,7 @@ verify_api_key () {
 }
 
 fetch () {
-  if [ "${0#*$ORB_TEST_ENV}" = "$0" ]; then
+  if [ "${0#*$ORB_TEST_ENV}" != "$0" ]; then
     return 0
   fi
 
@@ -243,6 +243,8 @@ post_to_jira () {
 }
 
 # kick off
-source $JIRA_STATE_PATH
-run
-rm -f $JIRA_STATE_PATH
+if [ "${0#*$ORB_TEST_ENV}" = "$0" ]; then
+  source $JIRA_STATE_PATH
+  run
+  rm -f $JIRA_STATE_PATH
+fi
