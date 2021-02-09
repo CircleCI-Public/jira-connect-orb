@@ -245,7 +245,6 @@ post_to_jira () {
 # kick off
 if [ "${0#*$ORB_TEST_ENV}" = "$0" ]; then
   source $JIRA_STATE_PATH
-  echo $JIRA_STATE_PATH $JIRA_BUILD_STATUS
   run
   rm -f $JIRA_STATE_PATH
 fi

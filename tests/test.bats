@@ -24,8 +24,7 @@ function setup {
   export JIRA_STATE_PATH="${RESULT_DIR}/jira.status"
   export JIRA_SCAN_BODY="false"
   export CIRCLECI_TOKEN="${CIRCLE_TOKEN}"
-
-  source src/scripts/notify.sh
+  export ORB_TEST_ENV="bats-core"
 }
 
 @test "1: Execution of Notify Script Works with env vars" {
