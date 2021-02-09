@@ -49,7 +49,7 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success
-  assert_jq_match '.acceptedBuilds | length' 1 ${RESULT_DIR}/curl_response.txt # acc Deployments has one object
+  assert_jq_match '.acceptedBuilds | length' 1 ${BATS_TMPDIR}/curl_response.txt # acc Deployments has one object
 }
 
 @test "2: Workflow Status of Fail will override passing job" {
@@ -74,10 +74,10 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success 
-  assert_jq_match '.builds | length' 1 ${RESULT_DIR}/jira-status.json
-  assert_jq_match '.builds[0].state' "failed" ${RESULT_DIR}/jira-status.json
-  assert_jq_match '.acceptedBuilds | length' 1 ${RESULT_DIR}/curl_response.txt 
-  assert_jq_match '.rejectedBuilds | length' 0 ${RESULT_DIR}/curl_response.txt 
+  assert_jq_match '.builds | length' 1 ${BATS_TMPDIR}/jira-status.json
+  assert_jq_match '.builds[0].state' "failed" ${BATS_TMPDIR}/jira-status.json
+  assert_jq_match '.acceptedBuilds | length' 1 ${BATS_TMPDIR}/curl_response.txt 
+  assert_jq_match '.rejectedBuilds | length' 0 ${BATS_TMPDIR}/curl_response.txt 
   assert_contains_text "workflow is failed"
 }
 
@@ -102,8 +102,8 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success
-  assert_jq_match '.acceptedDeployments | length' 1 ${RESULT_DIR}/curl_response.txt # acc Deployments has one object
-  assert_jq_match '.rejectedDeployments | length' 0 ${RESULT_DIR}/curl_response.txt   #rejecte does not
+  assert_jq_match '.acceptedDeployments | length' 1 ${BATS_TMPDIR}/curl_response.txt # acc Deployments has one object
+  assert_jq_match '.rejectedDeployments | length' 0 ${BATS_TMPDIR}/curl_response.txt   #rejecte does not
 
 }
 
@@ -133,9 +133,9 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success 
-  assert_jq_match '.builds | length' 1 ${RESULT_DIR}/jira-status.json
-  assert_jq_match '.builds[0].buildNumber' 313 ${RESULT_DIR}/jira-status.json
-  assert_jq_match '.builds[0].pipelineId' "${CIRCLE_PROJECT_REPONAME}" ${RESULT_DIR}/jira-status.json
+  assert_jq_match '.builds | length' 1 ${BATS_TMPDIR}/jira-status.json
+  assert_jq_match '.builds[0].buildNumber' 313 ${BATS_TMPDIR}/jira-status.json
+  assert_jq_match '.builds[0].pipelineId' "${CIRCLE_PROJECT_REPONAME}" ${BATS_TMPDIR}/jira-status.json
 
 
   #
@@ -161,9 +161,9 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success 
-  assert_jq_match '.deployments | length' 1 ${RESULT_DIR}/jira-status.json
-  assert_jq_match '.deployments[0].deploymentSequenceNumber' 313 ${RESULT_DIR}/jira-status.json
-  assert_jq_match '.deployments[0].pipeline.id' "${CIRCLE_PROJECT_REPONAME}" ${RESULT_DIR}/jira-status.json
+  assert_jq_match '.deployments | length' 1 ${BATS_TMPDIR}/jira-status.json
+  assert_jq_match '.deployments[0].deploymentSequenceNumber' 313 ${BATS_TMPDIR}/jira-status.json
+  assert_jq_match '.deployments[0].pipeline.id' "${CIRCLE_PROJECT_REPONAME}" ${BATS_TMPDIR}/jira-status.json
 }
 
 @test "5: Execution of Notify Script Works for Deployments with Service ID" {
@@ -188,9 +188,9 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success
-  assert_jq_match '.acceptedDeployments | length' 1 ${RESULT_DIR}/curl_response.txt # acc Deployments has one object
-  assert_jq_match '.rejectedDeployments | length' 0 ${RESULT_DIR}/curl_response.txt   #rejecte does not
-  assert_jq_match '.unknownAssociations | length' 0 ${RESULT_DIR}/curl_response.txt
+  assert_jq_match '.acceptedDeployments | length' 1 ${BATS_TMPDIR}/curl_response.txt # acc Deployments has one object
+  assert_jq_match '.rejectedDeployments | length' 0 ${BATS_TMPDIR}/curl_response.txt   #rejecte does not
+  assert_jq_match '.unknownAssociations | length' 0 ${BATS_TMPDIR}/curl_response.txt
 
 }
 
@@ -216,8 +216,8 @@ function setup {
   [[ "$status" == "0" ]]
 
   # and reports success
-  assert_jq_match '.acceptedDeployments | length' 1 ${RESULT_DIR}/curl_response.txt # acc Deployments has one object
-  assert_jq_match '.rejectedDeployments | length' 0 ${RESULT_DIR}/curl_response.txt   #rejecte does not
-  assert_jq_match '.unknownAssociations | length' 1 ${RESULT_DIR}/curl_response.txt
+  assert_jq_match '.acceptedDeployments | length' 1 ${BATS_TMPDIR}/curl_response.txt # acc Deployments has one object
+  assert_jq_match '.rejectedDeployments | length' 0 ${BATS_TMPDIR}/curl_response.txt   #rejecte does not
+  assert_jq_match '.unknownAssociations | length' 1 ${BATS_TMPDIR}/curl_response.txt
 
 }
