@@ -57,8 +57,8 @@ parse_jira_key_array () {
     ISSUE_KEYS=$JIRA_MANUAL_TAG
   else
     # must save as ISSUE_KEYS='["CC-4"]'
-    fetch "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}" /tmp/workflow_info.json
-    PIPELINE_ID=$(cat /tmp/workflow_info.json | jq -r .pipeline_id)
+    fetch "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}" /tmp/workflow.json
+    PIPELINE_ID=$(cat /tmp/workflow.json | jq -r .pipeline_id)
     fetch "https://circleci.com/api/v2/pipeline/${PIPELINE_ID}" /tmp/pipeline_info.json
     # see https://jqplay.org/s/TNq7c5ctot
     ISSUE_KEYS=$(cat /tmp/pipeline_info.json | jq -r "[.vcs.commit.subject | scan(\"(${JIRA_ISSUE_REGEX})\") | .[] ] + [.vcs.commit.subject | scan(\"(${JIRA_ISSUE_REGEX})\")   | .[] ] + [if .branch then .vcs.branch else \"\" end | scan(\"(${JIRA_ISSUE_REGEX})\")  | . [] ] + [if ${JIRA_SCAN_BODY} then .vcs.commit.body else \"\" end | scan(\"(${JIRA_ISSUE_REGEX})\") | .[] ]")
