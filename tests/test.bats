@@ -6,8 +6,6 @@ load bats_helper
 
 # setup is run beofre each test
 function setup {
-  cp tests/mocks/* /tmp
-
   export RESULT_DIR="${BATS_TMPDIR}/jira-tests"
   mkdir -p $RESULT_DIR
   INPUT_PROJECT_CONFIG=${RESULT_DIR}/input_config-${BATS_TEST_NUMBER}
@@ -28,6 +26,8 @@ function setup {
 }
 
 @test "1: Execution of Notify Script Works with env vars" {
+  cp tests/mocks/pipeline.json /tmp/pipeline_info.json
+  cp tests/mocks/workflow.json /tmp/workflow.json
   # and the infomprovied by a CCI container
   export CIRCLE_WORKFLOW_ID="ccfab95a-1ee6-4473-b4c0-d0992815d3af"
   export CIRCLE_BUILD_NUM="317"
@@ -53,6 +53,9 @@ function setup {
 }
 
 @test "2: Workflow Status of Fail will override passing job" {
+  cp tests/mocks/pipeline.json /tmp/pipeline_info.json
+  cp tests/mocks/workflow_fail.json /tmp/workflow.json
+
   export CIRCLE_WORKFLOW_ID="5ddcc736-89ec-477b-bbd6-ec4cbbf5f211"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
@@ -64,7 +67,7 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
-  echo 'export JIRA_BUILD_STATUS="failed"' >> ${RESULT_DIR}/jira.status
+  echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
   
