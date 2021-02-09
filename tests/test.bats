@@ -21,7 +21,7 @@ function setup {
   export JIRA_ISSUE_REGEX="[A-Z]{2,30}-[0-9]+"
   export JIRA_JOB_TYPE="build"
   export JIRA_ENVIRONMENT_TYPE="development"
-  export JIRA_STATE_PATH="${BATS_TMPDIR}/jira.status"
+  export JIRA_STATE_PATH="${RESULT_DIR}/jira.status"
   export JIRA_SCAN_BODY="false"
   export CIRCLECI_TOKEN="${CIRCLE_TOKEN}"
 
