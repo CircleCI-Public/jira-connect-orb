@@ -38,7 +38,7 @@ jobs:
             export BATS_IMPORT_DEV_ORB="circleci/jira@dev:${CIRCLE_SHA1:0:7}"
             bats tests
       - store_artifacts:
-          path: /tmp/jira-tests/
+          path: /tmp
 
 workflows:
   lint_pack-validate_publish-dev:

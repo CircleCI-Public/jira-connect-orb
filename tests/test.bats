@@ -53,8 +53,6 @@ function setup {
 }
 
 @test "2: Workflow Status of Fail will override passing job" {
-
-  # and the improvised by a CCI container
   export CIRCLE_WORKFLOW_ID="5ddcc736-89ec-477b-bbd6-ec4cbbf5f211"
   export CIRCLE_BUILD_NUM="317"
   export CIRCLE_JOB="passing"
@@ -66,14 +64,12 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
-  echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
+  echo 'export JIRA_BUILD_STATUS="failed"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
   
-  # then is passes
   [[ "$status" == "0" ]]
 
-  # and reports success 
   assert_jq_match '.builds | length' 1 ${BATS_TMPDIR}/jira-status.json
   assert_jq_match '.builds[0].state' "failed" ${BATS_TMPDIR}/jira-status.json
   assert_jq_match '.acceptedBuilds | length' 1 ${BATS_TMPDIR}/curl_response.txt 
@@ -136,7 +132,6 @@ function setup {
   assert_jq_match '.builds | length' 1 ${BATS_TMPDIR}/jira-status.json
   assert_jq_match '.builds[0].buildNumber' 313 ${BATS_TMPDIR}/jira-status.json
   assert_jq_match '.builds[0].pipelineId' "${CIRCLE_PROJECT_REPONAME}" ${BATS_TMPDIR}/jira-status.json
-
 
   #
   # now deployment
