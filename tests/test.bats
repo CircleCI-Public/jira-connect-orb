@@ -98,6 +98,7 @@ function setup {
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
+  cp ${BATS_TMPDIR}/curl_response.txt ${RESULT_DIR}/curl_3_response.txt
 
   # then is passes
   [[ "$status" == "0" ]]
@@ -105,7 +106,7 @@ function setup {
   # and reports success
   assert_jq_match '.acceptedDeployments | length' 1 ${BATS_TMPDIR}/curl_response.txt # acc Deployments has one object
   assert_jq_match '.rejectedDeployments | length' 0 ${BATS_TMPDIR}/curl_response.txt   #rejecte does not
-
+  cp ${BATS_TMPDIR}/curl_response.txt ${RESULT_DIR}/curl_3_response.txt
 }
 
 
