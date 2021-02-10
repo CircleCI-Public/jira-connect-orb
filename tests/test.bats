@@ -103,7 +103,6 @@ function setup {
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
-  cp ${BATS_TMPDIR}/curl_response.txt ${RESULT_DIR}/curl_3_response.txt
 
   # then is passes
   [[ "$status" == "0" ]]
@@ -218,6 +217,7 @@ function setup {
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
   export JIRA_JOB_TYPE="deployment"
+  export JIRA_SERVICE_ID="invalid"
 
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
