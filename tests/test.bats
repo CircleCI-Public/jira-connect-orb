@@ -98,7 +98,7 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
-  export JIRA_JOB_TYPE="deploy"
+  export JIRA_JOB_TYPE="deployment"
 
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
@@ -158,7 +158,7 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
-  export JIRA_JOB_TYPE="deploy"
+  export JIRA_JOB_TYPE="deployment"
 
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
  
@@ -187,7 +187,7 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
-  export JIRA_JOB_TYPE="deploy"
+  export JIRA_JOB_TYPE="deployment"
 
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
@@ -217,7 +217,7 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
-  export JIRA_JOB_TYPE="deploy"
+  export JIRA_JOB_TYPE="deployment"
 
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
