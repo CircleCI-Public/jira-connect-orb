@@ -3,7 +3,7 @@
   "id" : "ccfab95a-1ee6-4473-b4c0-d0992815d3af",
   "name" : "build-deploy",
   "project_slug" : "gh/eddiewebb/circleci-samples",
-  "status" : "fail",
+  "status" : "failed",
   "started_by" : "1eebc242-7665-4d68-b595-5c37ca8835fc",
   "pipeline_number" : 313,
   "created_at" : "2020-02-28T21:51:47Z",

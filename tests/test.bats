@@ -23,6 +23,8 @@ function setup {
   export JIRA_SCAN_BODY="false"
   export CIRCLECI_TOKEN="${CIRCLE_TOKEN}"
   export ORB_TEST_ENV="bats-core"
+
+  cp tests/mocks/me.json /tmp/me.json
 }
 
 @test "1: Execution of Notify Script Works with env vars" {
