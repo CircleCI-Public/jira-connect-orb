@@ -149,7 +149,7 @@ generate_json_payload_deployment () {
   --arg envId "${CIRCLE_WORKFLOW_ID}-${JIRA_ENVIRONMENT}" \
   --arg envName "${JIRA_ENVIRONMENT}" \
   --arg envType "${JIRA_ENVIRONMENT_TYPE}" \
-  --arg serviceId "${JIRA_SERVICE_ID}" \
+  --argjson serviceId "[${JIRA_SERVICE_ID}]" \
   --argjson issueKeys "${ISSUE_KEYS}" \
   '
   ($time_str | tonumber) as $time_num |
@@ -176,9 +176,7 @@ generate_json_payload_deployment () {
           },
           {
             "associationType": "serviceIdOrKeys",
-            "values": [
-              $serviceId
-            ]
+            "values": $serviceId
           }
         ],
         "environment":{
