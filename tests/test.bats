@@ -17,7 +17,6 @@ function setup {
   INLINE_ORB_NAME="jira"
 
   export JIRA_ISSUE_REGEX="[A-Z]{2,30}-[0-9]+"
-  export JIRA_JOB_TYPE="build"
   export JIRA_ENVIRONMENT_TYPE="development"
   export JIRA_STATE_PATH="${RESULT_DIR}/jira.status"
   export JIRA_SCAN_BODY="false"
@@ -42,6 +41,8 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
+  export JIRA_JOB_TYPE="build"
+
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
@@ -69,6 +70,8 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
+  export JIRA_JOB_TYPE="build"
+
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
@@ -95,6 +98,8 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
+  export JIRA_JOB_TYPE="deploy"
+
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
@@ -124,9 +129,9 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
-  echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
-  process_config_with tests/cases/simple.yml
+  export JIRA_JOB_TYPE="build"
 
+  echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
   echo $output > ${RESULT_DIR}/script-${BATS_TEST_NUMBER}-builds.out
@@ -153,6 +158,8 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/355"
   export CIRCLE_BRANCH="master"
+  export JIRA_JOB_TYPE="deploy"
+
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
  
   run bash src/scripts/notify.sh
@@ -180,6 +187,8 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
+  export JIRA_JOB_TYPE="deploy"
+
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
@@ -208,6 +217,8 @@ function setup {
   export CIRCLE_COMPARE_URL="https://github.com/CircleCI-Public/jira-connect-orb"
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
+  export JIRA_JOB_TYPE="deploy"
+
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
   run bash src/scripts/notify.sh
