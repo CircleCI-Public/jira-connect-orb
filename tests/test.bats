@@ -187,6 +187,7 @@ function setup {
   export CIRCLE_BUILD_URL="https://circleci.com/gh/project/build/23"
   export CIRCLE_BRANCH="master"
   export JIRA_JOB_TYPE="deployment"
+  export JIRA_SERVICE_ID="b:YXJpOmNsb3VkOmdyYXBoOjpzZXJ2aWNlL2E1MDU4MjMyLTZmNzctMTFlYS1hOGRmLTBhNzdmM2Y0NTMwNC84NjIwNmQwNC03MmNhLTExZWEtOTU2OC0wYTc3ZjNmNDUzMDQ="
 
   echo 'export JIRA_BUILD_STATUS="successful"' >> ${RESULT_DIR}/jira.status
 
