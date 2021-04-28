@@ -92,7 +92,7 @@ steps:
           "${URL}")
 
           if [[ "$RESP" != "20"* ]]; then
-            echo "Curl failed with code ${RESP}. full response below."
+            echo "Curl failed with code ${RESP}.\n URL attempted: ${URL}\n Full response below."
             cat $OFILE
             exit 1
           fi
