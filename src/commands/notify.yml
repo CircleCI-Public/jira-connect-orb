@@ -26,7 +26,7 @@ parameters:
     type: string
     default: ''
   issue_regexp:
-    description: Override the default project key regexp if your project keys follow a different format.
+    description: Override the default project key regexp if your project keys follow a different format.  This regex may optionally define a single capture group using () to select a Jira Issue Key.
     default: "[A-Z]{2,30}-[0-9]+"
     type: string
   scan_commit_body:
@@ -102,7 +102,7 @@ steps:
           # must save as ISSUE_KEYS='["CC-4"]'
           fetch https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM} /tmp/job_info.json
 
-          # If the regex has a capture group, do not wrap it with ()
+          # If the regex has a capture group already, do not wrap it with ()
           ISSUE_REGEX="<<parameters.issue_regexp>>"
           if [[ ! "$ISSUE_REGEX" == *[\(\)]* ]]; then
             ISSUE_REGEX="(<<parameters.issue_regexp>>)"
