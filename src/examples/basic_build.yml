@@ -1,4 +1,4 @@
-description: Notify jira on single job
+description: Notify Jira on single job
 usage:
   version: 2.1
   orbs:
