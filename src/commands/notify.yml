@@ -119,7 +119,7 @@ steps:
 
           if [ "<<parameters.job_type>>" != "deployment" ]; then
               # deployments are special, cause they pass or fail alone.
-              # but jobs are stuck togehter, and they must respect status of workflow
+              # but jobs are stuck together, and they must respect status of workflow
               if [[ "$WORKFLOW_STATUS" == "fail"* ]]; then
                 export JIRA_BUILD_STATUS="failed"
               fi
