@@ -47,7 +47,7 @@ usage:
   jobs:
     component-A:
       docker:
-        - image: circleci/node:10
+        - image: circleci/node:16
       working_directory: ~/repo
       steps:
         - checkout
@@ -56,7 +56,7 @@ usage:
 
     component-B: #this job just ensutes that integration job get a higher component-B number than lint
       docker:
-        - image: circleci/node:10
+        - image: circleci/node:16
       working_directory: ~/repo
       steps:
         - checkout
@@ -65,7 +65,7 @@ usage:
 
     integration:
       docker:
-        - image: circleci/node:10
+        - image: circleci/node:16
       working_directory: ~/repo
       steps:
         - checkout
@@ -74,7 +74,7 @@ usage:
 
     deploy:
       docker:
-        - image: circleci/node:10
+        - image: circleci/node:16
       working_directory: ~/repo
       steps:
         - checkout

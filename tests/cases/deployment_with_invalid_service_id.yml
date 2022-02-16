@@ -2,7 +2,7 @@ jobs:
   build:
     jobs:
     docker:
-    - image: circleci/node:10
+    - image: circleci/node:16
     steps:
       - run: echo "hello"
       - jira/notify:
