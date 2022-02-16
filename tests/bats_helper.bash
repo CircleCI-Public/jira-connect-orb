@@ -12,7 +12,7 @@ function append_project_configuration {
 }
 
 #
-#  USes circleci config pack, but indents everything under an `orbs.ORBNAME` element so it may be inlined.
+#  Uses circleci config pack, but indents everything under an `orbs.ORBNAME` element so it may be inlined.
 #
 function assemble_inline {
 	CONFIG=$1

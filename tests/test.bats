@@ -4,7 +4,7 @@
 load bats_helper
 
 
-# setup is run beofre each test
+# setup is run before each test
 function setup {
   INPUT_PROJECT_CONFIG=${BATS_TMPDIR}/input_config-${BATS_TEST_NUMBER}
   PROCESSED_PROJECT_CONFIG=${BATS_TMPDIR}/packed_config-${BATS_TEST_NUMBER} 
