@@ -30,7 +30,7 @@ parameters:
     default: "[A-Z]{2,30}-[0-9]+"
     type: string
   scan_commit_body:
-    description: Whether or not to scan the Commit Body for the JIRA Issue Tag. Default is false.
+    description: Whether or not to scan the Commit Body for the Jira Issue Tag. Default is false.
     default: false
     type: boolean
 
@@ -39,13 +39,13 @@ steps:
       when: always
 
   - run:
-      name: JIRA - Setting Failure Condition
+      name: Jira - Setting Failure Condition
       command: |
         echo 'JIRA_BUILD_STATUS="failed"' > <<parameters.state_path>>
       when: on_fail
 
   - run:
-      name: JIRA - Setting Success Condition
+      name: Jira - Setting Success Condition
       command: |
         echo 'JIRA_BUILD_STATUS="successful"' > <<parameters.state_path>>
       when: on_success
