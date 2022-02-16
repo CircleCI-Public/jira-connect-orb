@@ -14,6 +14,6 @@ usage:
   jobs:
     build:
       docker:
-      - image: circleci/node:16
+      - image: cimg/node:16
       steps:
         - run: echo "hello"
