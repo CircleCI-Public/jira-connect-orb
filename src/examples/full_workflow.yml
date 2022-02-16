@@ -54,7 +54,7 @@ usage:
         - run: exit 0
         - jira/notify
 
-    component-B: #this job just ensutes that integration job get a higher component-B number than lint
+    component-B: # this job just ensures that the integration job gets a higher component-B number than lint
       docker:
         - image: circleci/node:16
       working_directory: ~/repo
