@@ -189,7 +189,7 @@ steps:
           --arg pipelineDisplay "#${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_PROJECT_REPONAME}"  \
           --arg deployDisplay "#${CIRCLE_PIPELINE_NUMBER}  ${CIRCLE_PROJECT_REPONAME} - <<parameters.environment>>"  \
           --arg description "${CIRCLE_PROJECT_REPONAME} #${CIRCLE_PIPELINE_NUMBER} ${CIRCLE_JOB} <<parameters.environment>>" \
-          --arg envId "${CIRCLE_WORKFLOW_ID}-<<parameters.environment>>" \
+          --arg envId "${CIRCLE_PROJECT_REPONAME}-<<parameters.environment>>" \
           --arg envName "<<parameters.environment>>" \
           --arg envType "<<parameters.environment_type>>" \
           --argjson issueKeys "${ISSUE_KEYS}" \
