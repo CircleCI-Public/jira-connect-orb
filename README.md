@@ -1,3 +1,13 @@
+# THIS REPOSITORY HAS MOVED ⚠️
+
+**The new CircleCI Jira Orb can be found here:** https://github.com/CircleCI-Public/jira-orb
+
+View the [docs](https://circleci.com/docs/jira-plugin/) for more information
+
+**Below is for historical purposes only.**
+
+---
+
 # JIRA Connect orb  [![CircleCI status](https://circleci.com/gh/CircleCI-Public/jira-connect-orb.svg "CircleCI status")](https://circleci.com/gh/CircleCI-Public/jira-connect-orb) [![CircleCI Orb Version](https://img.shields.io/badge/endpoint.svg?url=https://badges.circleci.io/orb/circleci/jira)](https://circleci.com/orbs/registry/orb/circleci/jira) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/CircleCI-Public/jira-connect-orb/master/LICENSE) [![CircleCI Community](https://img.shields.io/badge/community-CircleCI%20Discuss-343434.svg)](https://discuss.circleci.com/c/ecosystem/orbs)
 
 Updates the status of JIRA tickets as related commits building in CircleCI pass/fail.
